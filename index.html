@@ -778,9 +778,10 @@ function classifyPoint(name){
 }
 
 function classifyRoute(name){
+  // 先排除：渡輪 / Swartz Bay 段（不適用，你從 Tsawwassen 出發）
+  if(/ferry|swartz/i.test(name)) return null;
   // 6 段環島划槳路線都歸入海上路線
   if(/lyall|cabbage|east point|narvaez|thompson/i.test(name)) return 'kayak-real';
-  // Swartz Bay 渡輪段 — 不適用（你是從 Tsawwassen 出發）
   return null;
 }
 
