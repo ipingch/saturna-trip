@@ -1,0 +1,188 @@
+{
+  "type": "FeatureCollection",
+  "name": "Saturna & Pender 自訂點位",
+  "description": "Ping 整理的精確座標，依類別與島嶼分組",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.18948708400634, 48.81411549954675] },
+      "properties": {
+        "name": "Boat Passage",
+        "cat": "tide",
+        "island": "saturna",
+        "note": "Saturna 與 Samuel 島間狹窄水道 · 急流逾 4 節 · 僅平潮可通過"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.18879921243744, 48.81379078172308] },
+      "properties": {
+        "name": "Winter Point",
+        "cat": "coast",
+        "island": "saturna",
+        "note": "Saturna 西北端海角 · Winter Cove 入口"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.18802754680418, 48.80972449140913] },
+      "properties": {
+        "name": "Gulf Islands National Park Reserve (Saturna)",
+        "cat": "wildlife",
+        "island": "saturna",
+        "note": "國家公園保護區 · 海豹、白頭海鵰、大藍鷺棲息地"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.16577767620065, 48.80738060824988] },
+      "properties": {
+        "name": "Russell Reef",
+        "cat": "coast",
+        "island": "saturna",
+        "note": "礁岩潮間帶 · 退潮可見潮池與海洋生物"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.08392198762812, 48.79864123305177] },
+      "properties": {
+        "name": "Cabbage Island Campground",
+        "cat": "land",
+        "island": "saturna",
+        "note": "Gulf Islands National Park 營地 · 大片沙灘 · 夏季熱門需預約"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.03149778528524, 48.78621250345949] },
+      "properties": {
+        "name": "East Point Light",
+        "cat": "coast",
+        "island": "saturna",
+        "note": "Saturna 最東端燈塔（1881–87 建，現存 1949 版）· 賞鯨熱點 · 砂岩奇岩"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.18877697815142, 48.77882433425604] },
+      "properties": {
+        "name": "Thomson Park",
+        "cat": "land",
+        "island": "saturna",
+        "note": "Saturna 南岸公園 · 海灘登陸點"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.27550758321706, 48.87628874171008] },
+      "properties": {
+        "name": "Active Pass Lighthouse",
+        "cat": "coast",
+        "island": "saturna",
+        "note": "Active Pass 海峽燈塔 · BC Ferries 主要航道"
+      }
+    },
+
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.24422596823877, 48.7804625062659] },
+      "properties": {
+        "name": "Sea Star Vineyards and Winery",
+        "cat": "food",
+        "island": "pender",
+        "note": "海景酒莊 · 品酒 · 露臺景觀"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.26683355786452, 48.77860032406087] },
+      "properties": {
+        "name": "Port Browning Marina Resort + Pub",
+        "cat": "food",
+        "island": "pender",
+        "note": "碼頭 + 補給 + Pub · 跨島後可在此休整"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.27788044824983, 48.781139646302826] },
+      "properties": {
+        "name": "Copper Otter Bar and Grill",
+        "cat": "food",
+        "island": "pender",
+        "note": "餐廳 / 酒吧"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.2975336369586, 48.79476514771857] },
+      "properties": {
+        "name": "Roesland",
+        "cat": "wildlife",
+        "island": "pender",
+        "note": "Gulf Islands National Park Reserve · 歷史 homestead · 海岸步道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.22983814188433, 48.75734497841358] },
+      "properties": {
+        "name": "Gulf Islands National Park Reserve (Pender)",
+        "cat": "wildlife",
+        "island": "pender",
+        "note": "Pender 國家公園保護區範圍 · Beaumont Marine Park 一帶"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.17610813468815, 48.73991413518348] },
+      "properties": {
+        "name": "Brooks Point Regional Park",
+        "cat": "wildlife",
+        "island": "pender",
+        "note": "南端公園 · 賞鯨點 · 海岸草甸"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.22537494639839, 48.73923488904101] },
+      "properties": {
+        "name": "Peter Cove Beach",
+        "cat": "land",
+        "island": "pender",
+        "note": "南端海灣沙灘 · 適合休息與下水"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.24511600335545, 48.754289358600474] },
+      "properties": {
+        "name": "Oaks Bluff Viewpoint",
+        "cat": "coast",
+        "island": "pender",
+        "note": "懸崖觀景點 · 眺望 Gulf Islands"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.26757218884073, 48.76842821151265] },
+      "properties": {
+        "name": "WOODS on Pender",
+        "cat": "food",
+        "island": "pender",
+        "note": "餐廳 + 露營小屋"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-123.31335491709108, 48.801429125964155] },
+      "properties": {
+        "name": "Otter Bay",
+        "cat": "land",
+        "island": "pender",
+        "note": "Pender 主要渡輪碼頭區 · 出入島入口"
+      }
+    }
+  ]
+}

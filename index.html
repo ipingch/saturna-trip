@@ -235,6 +235,7 @@ html,body{height:100%;overflow:hidden;font-family:'IBM Plex Sans',sans-serif;bac
       <button class="cat-btn" id="cat-land" onclick="toggleCat('land')"><span class="cat-ico">⛵</span>登陸 / 營地 / 休息</button>
       <button class="cat-btn" id="cat-coast" onclick="toggleCat('coast')"><span class="cat-ico">🪨</span>海岸地形 / 景點</button>
       <button class="cat-btn" id="cat-tide" onclick="toggleCat('tide')"><span class="cat-ico">🌊</span>潮汐 / 強流</button>
+      <button class="cat-btn" id="cat-food" onclick="toggleCat('food')"><span class="cat-ico">🍷</span>餐廳 / 補給</button>
     </div>
     <div style="padding:4px 16px 0;font-size:9px;color:#3d5568;line-height:1.5">標記整理自實際環島划槳遊記<br>（Bruce Holland, ourhomehas6wheels.com）</div>
 
@@ -321,6 +322,9 @@ html,body{height:100%;overflow:hidden;font-family:'IBM Plex Sans',sans-serif;bac
   <div class="leg-row"><div class="leg-line" style="background:#f0c050;opacity:0.7"></div>環島真實航跡（KML）</div>
   <div class="leg-row"><div class="leg-line" style="background:#b85040;opacity:0.85"></div>Brown Ridge 步道（GPX）</div>
   <div class="leg-row"><div style="width:16px;height:16px;border-radius:50%;background:#b85040;border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;flex-shrink:0">🥾</div>步道起點</div>
+  <div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:6px;padding-top:6px"></div>
+  <div class="leg-row"><div style="width:14px;height:14px;border-radius:50%;background:#888;border:1.5px solid #fff;flex-shrink:0"></div>Saturna 點位（圓形）</div>
+  <div class="leg-row"><div style="width:14px;height:14px;border-radius:4px;background:#888;border:1.5px solid #fff;flex-shrink:0"></div>Pender 點位（方形）</div>
   <div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:6px;padding-top:6px;font-size:9px;color:#5a7a90;line-height:1.5;max-width:170px">划槳路線僅為方向示意，<strong style="color:#7ec8f0">非精確航跡</strong>。實際路線請行前以海圖規劃，出航後上傳 GPX。</div>
 </div>
 
@@ -524,10 +528,11 @@ let EXPLORE = [];
 let KML_ROUTES = []; // 從 KML 載入的 6 段環島真實航跡
 
 const EXPLORE_META = {
-  wildlife:{label:'野生動物熱點',color:'#e8a838',icon:'🦭'},
+  wildlife:{label:'野生動物熱點 / 國家公園',color:'#e8a838',icon:'🦭'},
   land:{label:'登陸 / 營地 / 休息',color:'#4caf72',icon:'⛵'},
   coast:{label:'海岸地形 / 景點',color:'#b88a5a',icon:'🪨'},
-  tide:{label:'潮汐 / 強流',color:'#5aa8d8',icon:'🌊'}
+  tide:{label:'潮汐 / 強流',color:'#5aa8d8',icon:'🌊'},
+  food:{label:'餐廳 / 補給',color:'#c87aa8',icon:'🍷'}
 };
 
 const MARKERS = [
@@ -671,14 +676,18 @@ function buildLayers(){
     }
   });
 
-  // 探索標記（四類）— 建立後預設隱藏，由側欄開關控制
+  // 探索標記（五類）— 建立後預設隱藏，由側欄開關控制
+  // 形狀區分島嶼：圓形 = Saturna，圓角方形 = Pender
   EXPLORE.forEach(e=>{
     const meta=EXPLORE_META[e.cat];
+    const isPender=e.island==='pender';
+    const shape=isPender?'border-radius:5px':'border-radius:50%';
     const icon=L.divIcon({className:'',
-      html:`<div style="width:24px;height:24px;border-radius:50%;background:${meta.color};border:2px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1">${meta.icon}</div>`,
+      html:`<div style="width:24px;height:24px;${shape};background:${meta.color};border:2px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1">${meta.icon}</div>`,
       iconSize:[24,24],iconAnchor:[12,12]});
+    const islandLabel=isPender?'Pender':(e.island==='saturna'?'Saturna':'');
     const mk=L.marker([e.lat,e.lng],{icon,riseOnHover:true,zIndexOffset:250})
-      .bindPopup(`<div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:#1a2a3a;max-width:200px"><strong style="color:${meta.color==='#e8a838'?'#b8841a':meta.color}">${meta.icon} ${e.label}</strong><br><span style="font-size:12px;color:#555;line-height:1.5">${e.note}</span></div>`,{maxWidth:230,closeButton:false});
+      .bindPopup(`<div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:#1a2a3a;max-width:220px"><strong style="color:${meta.color==='#e8a838'?'#b8841a':meta.color}">${meta.icon} ${e.label}</strong>${islandLabel?`<span style="font-size:10px;color:#888;margin-left:6px">· ${islandLabel}</span>`:''}<br><span style="font-size:12px;color:#555;line-height:1.5">${e.note}</span></div>`,{maxWidth:250,closeButton:false});
     mk._cat=e.cat;
     mk.on('mouseover',()=>mk.openPopup());
     mk.on('mouseout',()=>mk.closePopup());
@@ -780,7 +789,7 @@ async function loadKML(){
         const lng=parseFloat(coords[0]), lat=parseFloat(coords[1]);
         const cat=classifyPoint(name);
         if(cat){
-          EXPLORE.push({cat,lat,lng,label:name,note:desc||'（KML 來源點）'});
+          EXPLORE.push({cat,lat,lng,label:name,note:desc||'（KML 來源點）',island:'saturna'});
           pointCount++;
         }
       }else if(ln){
@@ -863,8 +872,35 @@ async function loadHikingTrail(){
   }
 }
 
-// 先載 KML、GPX，再 build layers
-Promise.all([loadKML(),loadHikingTrail()]).then(()=>{
+// === GeoJSON 載入器：自訂點位（你手動標的精確座標） ===
+// 來源：你從 Google Maps 右鍵複製的座標
+async function loadCustomPoints(){
+  try{
+    const res=await fetch('custom-points.geojson');
+    if(!res.ok) throw new Error('GeoJSON 載入失敗：'+res.status);
+    const data=await res.json();
+    let count=0;
+    data.features.forEach(f=>{
+      if(f.geometry.type!=='Point') return;
+      const [lng,lat]=f.geometry.coordinates;
+      const p=f.properties;
+      EXPLORE.push({
+        cat:p.cat,
+        lat,lng,
+        label:p.name,
+        note:p.note||'',
+        island:p.island||null
+      });
+      count++;
+    });
+    console.log(`✓ GeoJSON 載入：${count} 個自訂點位`);
+  }catch(err){
+    console.error('GeoJSON 載入錯誤：',err);
+  }
+}
+
+// 先載 KML、GPX、GeoJSON，再 build layers
+Promise.all([loadKML(),loadHikingTrail(),loadCustomPoints()]).then(()=>{
   buildLayers();
   refreshStyles();
 });
