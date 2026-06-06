@@ -173,16 +173,6 @@
         "island": "pender",
         "note": "餐廳 + 露營小屋"
       }
-    },
-    {
-      "type": "Feature",
-      "geometry": { "type": "Point", "coordinates": [-123.31335491709108, 48.801429125964155] },
-      "properties": {
-        "name": "Otter Bay",
-        "cat": "land",
-        "island": "pender",
-        "note": "Pender 主要渡輪碼頭區 · 出入島入口"
-      }
     }
   ]
 }
