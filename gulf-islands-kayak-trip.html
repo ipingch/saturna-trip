@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saturna & Pender — Kayak + Camp 2026</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:'IBM Plex Sans',sans-serif;background:#0f1923;color:#e8e4dc}
+#map{position:absolute;inset:0;z-index:0;background:#0a2438}
+
+#sidebar{
+  position:absolute;top:0;left:0;height:100%;width:340px;
+  background:rgba(10,18,26,0.93);
+  backdrop-filter:blur(14px);
+  z-index:10;display:flex;flex-direction:column;
+  border-right:1px solid rgba(255,255,255,0.07);
+  transition:transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+#sidebar.collapsed{transform:translateX(-306px)}
+#toggle-btn{
+  position:absolute;right:-36px;top:50%;transform:translateY(-50%);
+  width:36px;height:64px;
+  background:rgba(10,18,26,0.88);
+  border:1px solid rgba(255,255,255,0.1);border-left:none;
+  border-radius:0 8px 8px 0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:#7bafc8;font-size:18px;transition:background 0.2s;
+}
+#toggle-btn:hover{background:rgba(30,55,80,0.95);color:#a8d4ec}
+
+.sb-header{padding:18px 20px 12px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0}
+.trip-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.16em;color:#3d6a88;text-transform:uppercase;margin-bottom:5px}
+.sb-header h1{font-size:16px;font-weight:500;color:#c8e4f0;line-height:1.35}
+.sb-header .dates{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#3d6a88;margin-top:3px}
+
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0}
+.stat-cell{background:#080e15;padding:10px 8px;text-align:center}
+.stat-val{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:500;color:#7ec8f0}
+.stat-lbl{font-size:10px;color:#2d5068;margin-top:1px;text-transform:uppercase;letter-spacing:0.07em}
+
+.sb-body{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1a3a50 transparent}
+.sb-body::-webkit-scrollbar{width:3px}
+.sb-body::-webkit-scrollbar-thumb{background:#1a3a50;border-radius:2px}
+
+.section-lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.12em;color:#1e4060;text-transform:uppercase;padding:14px 20px 5px}
+.cat-toggles{display:flex;flex-direction:column;gap:5px;padding:0 16px 4px}
+.cat-btn{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:7px;padding:7px 10px;font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:#6a8ca0;cursor:pointer;transition:all 0.15s}
+.cat-btn:hover{background:rgba(126,200,240,0.06);color:#9cc4d6}
+.cat-btn .cat-ico{font-size:14px;line-height:1;filter:grayscale(0.6);transition:filter 0.15s}
+.cat-btn.on{background:rgba(126,200,240,0.12);border-color:rgba(126,200,240,0.3);color:#c0e0f0}
+.cat-btn.on .cat-ico{filter:grayscale(0)}
+.cat-btn.on::after{content:'●';margin-left:auto;color:#7ec8f0;font-size:9px}
+
+.day-row{display:flex;align-items:flex-start;gap:10px;padding:9px 20px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.035);transition:background 0.15s;position:relative}
+.day-row:hover{background:rgba(100,180,230,0.05)}
+.day-row.active{background:rgba(100,180,230,0.09)}
+.day-row.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:#7ec8f0}
+.day-dot{width:20px;height:20px;min-width:20px;border-radius:50%;margin-top:1px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#fff;border:1.5px solid rgba(255,255,255,0.85);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+.day-info{flex:1;min-width:0}
+.day-name{font-size:12.5px;font-weight:500;color:#b8d4e4;line-height:1.3}
+.day-sub{font-size:11px;color:#2d5068;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day-dist{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#3d6a88;margin-top:2px}
+
+#detail-panel{
+  position:absolute;bottom:0;left:340px;width:340px;
+  background:rgba(6,12,20,0.95);backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,0.08);border-bottom:none;
+  border-radius:10px 10px 0 0;z-index:10;
+  max-height:82vh;display:none;flex-direction:column;
+  transition:left 0.3s cubic-bezier(.4,0,.2,1);
+}
+#detail-panel.visible{display:flex}
+.dp-header{padding:13px 14px 10px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:flex-start;gap:9px;flex-shrink:0}
+.dp-dot{width:9px;height:9px;min-width:9px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.dp-title{flex:1;min-width:0}
+.dp-date{font-size:10px;color:#2d5068;font-family:'IBM Plex Mono',monospace;margin-bottom:2px}
+.dp-title h2{font-size:14px;font-weight:500;color:#c0e0f0}
+.dp-sub-txt{font-size:11px;color:#3d6a88;margin-top:2px}
+#dp-close{background:none;border:none;color:#2d5068;font-size:20px;cursor:pointer;padding:0;line-height:1;margin-top:-1px;flex-shrink:0}
+#dp-close:hover{color:#7ec8f0}
+
+.dp-body{overflow-y:auto;flex:1;padding:10px 14px 14px;scrollbar-width:thin;scrollbar-color:#1a3a50 transparent}
+.dp-body::-webkit-scrollbar{width:3px}
+.dp-body::-webkit-scrollbar-thumb{background:#1a3a50}
+.decision-list{list-style:none;margin:0;padding:0}
+.decision-item{position:relative;padding:5px 8px 5px 20px;font-size:11.5px;color:#9cc4d6;line-height:1.5;border-left:2px solid #7ec8f0;margin-bottom:4px;background:rgba(126,200,240,0.05);border-radius:0 5px 5px 0}
+.decision-item::before{content:'◆';position:absolute;left:6px;top:5px;color:#7ec8f0;font-size:8px}
+.bailout-box{background:rgba(76,175,114,0.1);border:1px solid rgba(76,175,114,0.25);border-radius:6px;padding:7px 10px;font-size:11.5px;color:#7fc99a;line-height:1.5}
+
+.dp-sub-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.12em;color:#1e4060;text-transform:uppercase;margin:10px 0 6px}
+.dp-sub-lbl:first-child{margin-top:2px}
+
+.wx-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px}
+.wx-pill{background:rgba(100,180,230,0.07);border:1px solid rgba(100,180,230,0.13);border-radius:6px;padding:5px 8px;display:flex;flex-direction:column;align-items:center;min-width:58px}
+.wx-ico{font-size:14px;margin-bottom:2px}
+.wx-val{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7ec8f0;font-weight:500}
+.wx-lbl{font-size:9px;color:#1e4060;margin-top:1px}
+
+.wind-bar-wrap{margin:6px 0 10px}
+.wind-row{display:flex;justify-content:space-between;font-size:10px;font-family:'IBM Plex Mono',monospace;margin-bottom:3px}
+.wind-safe{color:#5db87c}.wind-caution{color:#c8a86a}.wind-danger{color:#c87060}
+.wind-track{height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;display:flex;gap:1px}
+.wind-seg-s{flex:3;background:#5db87c;border-radius:2px}
+.wind-seg-c{flex:3;background:#c8a86a;border-radius:2px}
+.wind-seg-d{flex:4;background:#c87060;border-radius:2px}
+.wind-marker{position:relative;height:10px;margin-top:2px}
+.wind-needle{position:absolute;top:0;width:2px;height:10px;background:#7ec8f0;border-radius:1px;transform:translateX(-50%)}
+
+.tide-tbl{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px}
+.tide-tbl th{font-family:'IBM Plex Mono',monospace;font-size:9px;color:#1e4060;text-transform:uppercase;letter-spacing:0.06em;padding:3px 5px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:left}
+.tide-tbl td{padding:5px 5px;border-bottom:1px solid rgba(255,255,255,0.035);font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6a9ab0}
+.tide-high{color:#7ec8f0!important;font-weight:500}
+.tide-low{color:#c8a86a!important;font-weight:500}
+.tide-ok{color:#5db87c;font-size:9px}
+.tide-warn{color:#c8773a;font-size:9px}
+
+.stop-list{list-style:none;margin-bottom:4px}
+.stop-item{display:flex;gap:8px;padding:5px 0;position:relative}
+.stop-item:not(:last-child)::after{content:'';position:absolute;left:4px;top:16px;bottom:-3px;width:1px;background:rgba(255,255,255,0.06)}
+.stop-n{width:9px;height:9px;min-width:9px;border-radius:50%;background:#0e2a40;border:1px solid #7ec8f0;margin-top:3px;flex-shrink:0}
+.stop-n.ferry{background:#251a08;border-color:#c8a86a}
+.stop-n.camp{background:#0a2218;border-color:#5db87c}
+.sn{font-size:12px;color:#9ac0d0;font-weight:500;line-height:1.3}
+.ss{font-size:10px;color:#1e4060;margin-top:1px}
+
+.dp-notes{width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:7px 9px;font-size:11px;font-family:'IBM Plex Sans',sans-serif;color:#6a9ab0;resize:vertical;min-height:52px;line-height:1.5}
+.dp-notes:focus{outline:none;border-color:rgba(126,200,240,0.25)}
+
+.safe-box{background:rgba(15,40,30,0.6);border:1px solid rgba(80,180,100,0.2);border-radius:7px;padding:8px 10px;margin:4px 0;font-size:11px;color:#5db87c;line-height:1.6}
+.warn-box{background:rgba(40,20,8,0.6);border:1px solid rgba(200,120,50,0.25);border-radius:7px;padding:8px 10px;margin:4px 0;font-size:11px;color:#c8773a;line-height:1.6}
+
+/* AI ASSISTANT */
+#ai-panel{
+  position:absolute;bottom:0;right:0;
+  width:360px;max-height:78vh;
+  background:rgba(6,12,20,0.96);backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,0.08);border-bottom:none;
+  border-radius:10px 10px 0 0;z-index:20;
+  display:none;flex-direction:column;
+}
+#ai-panel.visible{display:flex}
+.ai-header{padding:12px 14px 10px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.ai-dot{width:7px;height:7px;border-radius:50%;background:#7ec8f0;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.ai-title{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4a7fa0;flex:1}
+#ai-close{background:none;border:none;color:#2d5068;font-size:18px;cursor:pointer;padding:0}
+#ai-close:hover{color:#7ec8f0}
+
+#ai-messages{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px;min-height:120px;scrollbar-width:thin;scrollbar-color:#1a3a50 transparent}
+#ai-messages::-webkit-scrollbar{width:3px}
+#ai-messages::-webkit-scrollbar-thumb{background:#1a3a50}
+
+.msg{max-width:88%;font-size:12px;line-height:1.55;padding:7px 10px;border-radius:8px}
+.msg.user{background:rgba(100,180,230,0.12);color:#a8d0e8;align-self:flex-end;border-radius:8px 8px 2px 8px}
+.msg.ai{background:rgba(255,255,255,0.05);color:#8ab8cc;align-self:flex-start;border-radius:8px 8px 8px 2px}
+.msg.typing{color:#3d6a88;font-style:italic}
+
+.ai-suggestions{display:flex;flex-wrap:wrap;gap:5px;padding:8px 14px;border-top:1px solid rgba(255,255,255,0.05)}
+.ai-chip{background:rgba(100,180,230,0.08);border:1px solid rgba(100,180,230,0.15);border-radius:5px;padding:4px 8px;font-size:10px;font-family:'IBM Plex Mono',monospace;color:#4a7fa0;cursor:pointer;transition:background 0.15s,color 0.15s}
+.ai-chip:hover{background:rgba(100,180,230,0.16);color:#7ec8f0}
+
+.ai-input-row{display:flex;gap:6px;padding:8px 14px 10px;border-top:1px solid rgba(255,255,255,0.06)}
+#ai-input{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'IBM Plex Sans',sans-serif;color:#a8c8d8;outline:none}
+#ai-input:focus{border-color:rgba(126,200,240,0.3)}
+#ai-input::placeholder{color:#1e4060}
+#ai-send{background:rgba(100,180,230,0.15);border:1px solid rgba(100,180,230,0.25);border-radius:6px;padding:7px 12px;color:#7ec8f0;font-size:12px;cursor:pointer;font-family:'IBM Plex Mono',monospace;transition:background 0.15s}
+#ai-send:hover{background:rgba(100,180,230,0.25)}
+
+#map-controls{position:absolute;top:14px;right:14px;z-index:10;display:flex;flex-direction:column;gap:6px}
+.map-btn{background:rgba(8,15,22,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:6px 11px;font-size:11px;color:#5a8fa8;cursor:pointer;font-family:'IBM Plex Mono',monospace;transition:background 0.15s,color 0.15s;white-space:nowrap}
+.map-btn:hover{background:rgba(25,55,80,0.95);color:#a8d4ec}
+.map-btn.active{color:#7ec8f0;border-color:rgba(126,200,240,0.3)}
+
+#ai-toggle-btn{background:rgba(8,15,22,0.9);border:1px solid rgba(126,200,240,0.25);border-radius:7px;padding:7px 12px;font-size:11px;color:#7ec8f0;cursor:pointer;font-family:'IBM Plex Mono',monospace;display:flex;align-items:center;gap:6px;transition:background 0.15s}
+#ai-toggle-btn:hover{background:rgba(25,55,80,0.95)}
+.ai-btn-dot{width:6px;height:6px;border-radius:50%;background:#7ec8f0;animation:pulse 2s infinite}
+
+#legend{position:absolute;bottom:22px;right:14px;z-index:10;background:rgba(8,15,22,0.88);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:9px 12px}
+.leg-row{display:flex;align-items:center;gap:7px;padding:2px 0;font-size:10px;color:#3d6a88;font-family:'IBM Plex Mono',monospace}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.leg-line{width:18px;height:2px;border-radius:1px;flex-shrink:0}
+.leg-dash{width:18px;height:0;border-top:2px dashed;flex-shrink:0}
+
+.gpx-section{padding:0 14px 4px}
+#gpx-drop{border:1px dashed rgba(126,200,240,0.18);border-radius:7px;padding:12px;text-align:center;cursor:pointer;margin-bottom:8px;transition:all 0.2s}
+#gpx-drop:hover{border-color:rgba(126,200,240,0.35);background:rgba(126,200,240,0.04)}
+#gpx-drop p{font-size:11px;color:#1e4060}
+#gpx-drop input{display:none}
+#gpx-stat{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5db87c;text-align:center;padding:0 0 4px}
+
+.emerg-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:0 14px 14px}
+.emerg-item{background:rgba(60,15,15,0.5);border:1px solid rgba(180,60,60,0.15);border-radius:6px;padding:6px 8px}
+.emerg-lbl{font-size:9px;color:#7a3030;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px}
+.emerg-val{font-size:11px;font-family:'IBM Plex Mono',monospace;color:#b07070}
+
+.links-list{padding:0 14px 14px;display:flex;flex-direction:column;gap:1px}
+.ext-link{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;color:#3d6a88;text-decoration:none;transition:color 0.15s}
+.ext-link:hover{color:#7ec8f0}
+.ext-link span{color:#1e4060;font-size:10px}
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="sidebar">
+  <button id="toggle-btn" onclick="toggleSidebar()" aria-label="收合側欄">&#8249;</button>
+  <div class="sb-header">
+    <div class="trip-label">Kayak + Camp · Gulf Islands BC</div>
+    <h1>Saturna &amp; Pender<br>Island Traverse</h1>
+    <div class="dates">Jun 26 — Jul 3, 2026 &nbsp;·&nbsp; 8 days</div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-cell"><div class="stat-val">8</div><div class="stat-lbl">天數</div></div>
+    <div class="stat-cell"><div class="stat-val" id="total-km">~35</div><div class="stat-lbl">水路 km</div></div>
+    <div class="stat-cell"><div class="stat-cell-inner"><div class="stat-val">2</div><div class="stat-lbl">島嶼</div></div></div>
+  </div>
+  <div class="sb-body">
+    <div class="section-lbl">每日路段 — 點選查看詳情</div>
+    <div class="day-row" onclick="selectDay(0)"><div class="day-dot" style="background:#c8a86a">1</div><div class="day-info"><div class="day-name">Jun 26（五）出發</div><div class="day-sub">Tsawwassen → Lyall Harbour</div><div class="day-dist">渡輪日 · 07:05 出發</div></div></div>
+    <div class="day-row" onclick="selectDay(1)"><div class="day-dot" style="background:#5db87c">2</div><div class="day-info"><div class="day-name">Jun 27（六）Kayak 探索 Saturna</div><div class="day-sub">Winter Cove → East Point 海岸</div><div class="day-dist">水路 · 探索日</div></div></div>
+    <div class="day-row" onclick="selectDay(2)"><div class="day-dot" style="background:#7ec8f0">3</div><div class="day-info"><div class="day-name">Jun 28（日）Kayak 南岸</div><div class="day-sub">Arbutus Point → Southside 海岸線</div><div class="day-dist">水路 · ~12 km</div></div></div>
+    <div class="day-row" onclick="selectDay(3)"><div class="day-dot" style="background:#7ec8f0">4</div><div class="day-info"><div class="day-name">Jun 29（一）跨島段</div><div class="day-sub">Saturna → Pender via Navy Channel</div><div class="day-dist">水路 · ~18 km ⚠ 技術段</div></div></div>
+    <div class="day-row" onclick="selectDay(4)"><div class="day-dot" style="background:#c8a86a">5</div><div class="day-info"><div class="day-name">Jun 30（二）移往 Pender</div><div class="day-sub">Lyall Harbour → Otter Bay</div><div class="day-dist">渡輪日</div></div></div>
+    <div class="day-row" onclick="selectDay(5)"><div class="day-dot" style="background:#9b72c8">6</div><div class="day-info"><div class="day-name">Jul 1（三）Pender 自由</div><div class="day-sub">Mt Norman · Medicine Beach</div><div class="day-dist">自由活動日</div></div></div>
+    <div class="day-row" onclick="selectDay(6)"><div class="day-dot" style="background:#9b72c8">7</div><div class="day-info"><div class="day-name">Jul 2（四）Pender 自由</div><div class="day-sub">Beaumont Marine Park · Razor Point</div><div class="day-dist">自由活動日</div></div></div>
+    <div class="day-row" onclick="selectDay(7)"><div class="day-dot" style="background:#c8a86a">8</div><div class="day-info"><div class="day-name">Jul 3（五）返程</div><div class="day-sub">Otter Bay → Tsawwassen</div><div class="day-dist">17:15 → 18:35</div></div></div>
+
+    <div class="section-lbl">探索圖層 — 點選開關</div>
+    <div class="cat-toggles">
+      <button class="cat-btn" id="cat-wildlife" onclick="toggleCat('wildlife')"><span class="cat-ico">🦭</span>野生動物熱點</button>
+      <button class="cat-btn" id="cat-land" onclick="toggleCat('land')"><span class="cat-ico">⛵</span>登陸 / 營地 / 休息</button>
+      <button class="cat-btn" id="cat-coast" onclick="toggleCat('coast')"><span class="cat-ico">🪨</span>海岸地形 / 景點</button>
+      <button class="cat-btn" id="cat-tide" onclick="toggleCat('tide')"><span class="cat-ico">🌊</span>潮汐 / 強流</button>
+    </div>
+    <div style="padding:4px 16px 0;font-size:9px;color:#3d5568;line-height:1.5">標記整理自實際環島划槳遊記<br>（Bruce Holland, ourhomehas6wheels.com）</div>
+
+    <div class="section-lbl">GPX 路線上傳</div>
+    <div class="gpx-section">
+      <div id="gpx-drop" onclick="document.getElementById('gpx-file').click()">
+        <input type="file" id="gpx-file" accept=".gpx" onchange="loadGPX(event)">
+        <p>點擊上傳 .gpx 檔案</p>
+        <p style="margin-top:3px;font-size:10px;color:#1a3a50">路線將疊加顯示，自動計算距離</p>
+      </div>
+      <div id="gpx-stat"></div>
+    </div>
+
+    <div class="section-lbl">實用連結</div>
+    <div class="links-list">
+      <a class="ext-link" href="https://tides.gc.ca" target="_blank">Tides Canada (Station #7460) <span>→</span></a>
+      <a class="ext-link" href="https://www.windy.com/?49.000,-123.500,10" target="_blank">Windy.com 風力預報 <span>→</span></a>
+      <a class="ext-link" href="https://weather.gc.ca" target="_blank">Environment Canada 天氣 <span>→</span></a>
+      <a class="ext-link" href="https://www.bcferries.com/routes-fares/schedules" target="_blank">BC Ferries 時刻表 <span>→</span></a>
+      <a class="ext-link" href="https://bcparks.ca" target="_blank">BC Parks 露營預訂 <span>→</span></a>
+    </div>
+
+    <div class="section-lbl">緊急聯絡</div>
+    <div class="emerg-grid">
+      <div class="emerg-item"><div class="emerg-lbl">緊急</div><div class="emerg-val">911</div></div>
+      <div class="emerg-item"><div class="emerg-lbl">Coast Guard VHF</div><div class="emerg-val">Ch. 16</div></div>
+      <div class="emerg-item"><div class="emerg-lbl">Coast Guard</div><div class="emerg-val">1-800-567-5111</div></div>
+      <div class="emerg-item"><div class="emerg-lbl">Mayne Clinic</div><div class="emerg-val">250-539-2312</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="detail-panel">
+  <div class="dp-header">
+    <div class="dp-dot" id="dp-dot"></div>
+    <div class="dp-title">
+      <div class="dp-date" id="dp-date"></div>
+      <h2 id="dp-title-text"></h2>
+      <div class="dp-sub-txt" id="dp-sub"></div>
+    </div>
+    <button id="dp-close" onclick="closeDetail()">&#215;</button>
+  </div>
+  <div class="dp-body" id="dp-body"></div>
+</div>
+
+<div id="ai-panel">
+  <div class="ai-header">
+    <div class="ai-dot"></div>
+    <div class="ai-title">Trip AI Assistant</div>
+    <button id="ai-close" onclick="toggleAI()">&#215;</button>
+  </div>
+  <div id="ai-messages">
+    <div class="msg ai">嗨！我是你的行程助手。可以問我關於 Saturna & Pender 的任何問題，包括潮汐時機、划槳路線、天氣判斷或裝備建議。</div>
+  </div>
+  <div class="ai-suggestions">
+    <div class="ai-chip" onclick="askAI('跨島段安全嗎？風力要達到多少才不能划？')">跨島安全條件？</div>
+    <div class="ai-chip" onclick="askAI('7月Gulf Islands划槳需要wetsuit嗎？水溫多少？')">需要 wetsuit？</div>
+    <div class="ai-chip" onclick="askAI('Jun 28 低潮 12:33 出發，南岸路線大概怎麼划比較好？')">南岸路線建議</div>
+    <div class="ai-chip" onclick="askAI('Boundary Pass 的潮流有多強？什麼時候最危險？')">Boundary Pass 危險嗎？</div>
+    <div class="ai-chip" onclick="askAI('Arbutus Point Campground 有什麼設施？需要預訂嗎？')">露營地資訊</div>
+    <div class="ai-chip" onclick="askAI('如果天氣變差，Jun 29 跨島段有什麼備用方案？')">備用方案</div>
+  </div>
+  <div class="ai-input-row">
+    <input id="ai-input" type="text" placeholder="問任何行程問題…" onkeydown="if(event.key==='Enter')sendAI()">
+    <button id="ai-send" onclick="sendAI()">送出</button>
+  </div>
+</div>
+
+<div id="map-controls">
+  <button class="map-btn active" id="btn-osm" onclick="switchLayer('osm')">街道圖</button>
+  <div style="height:4px"></div>
+  <button id="ai-toggle-btn" onclick="toggleAI()"><div class="ai-btn-dot"></div>AI 行程助手</button>
+</div>
+
+<div id="legend">
+  <div class="leg-row"><div style="width:16px;height:16px;border-radius:50%;background:#5db87c;border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;flex-shrink:0;font-weight:500">1</div>路段編號 (Day 1–8)</div>
+  <div class="leg-row"><div style="width:18px;color:#7ec8f0;font-size:13px;flex-shrink:0;text-align:center">➤</div>划槳方向（示意）</div>
+  <div class="leg-row"><div class="leg-dash" style="border-color:#c8a86a"></div>渡輪航線</div>
+  <div class="leg-row"><div class="leg-dash" style="border-color:#5db87c"></div>陸路路線</div>
+  <div class="leg-row"><div style="width:14px;height:14px;border-radius:50%;border:1.5px dashed #e06050;background:rgba(224,96,80,0.15);flex-shrink:0"></div>強潮流危險區</div>
+  <div class="leg-row"><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid #4caf72;flex-shrink:0"></div>避難上岸點</div>
+  <div class="leg-row"><div style="width:18px;height:18px;border-radius:50%;background:#5db87c;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;flex-shrink:0">🏕</div>你的住宿營地</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#9b72c8"></div>住宿（Pender Airbnb）</div>
+  <div class="leg-row"><div class="leg-line" style="background:#f0c050;opacity:0.7"></div>環島真實航跡（KML）</div>
+  <div class="leg-row"><div class="leg-line" style="background:#b85040;opacity:0.85"></div>Brown Ridge 步道（GPX）</div>
+  <div class="leg-row"><div style="width:16px;height:16px;border-radius:50%;background:#b85040;border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;flex-shrink:0">🥾</div>步道起點</div>
+  <div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:6px;padding-top:6px;font-size:9px;color:#5a7a90;line-height:1.5;max-width:170px">划槳路線僅為方向示意，<strong style="color:#7ec8f0">非精確航跡</strong>。實際路線請行前以海圖規劃，出航後上傳 GPX。</div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const DAYS = [
+  {
+    color:'#c8a86a',date:'Fri, Jun 26',title:'出發前往 Saturna',sub:'Tsawwassen → Lyall Harbour（渡輪日）',
+    wx:{air:'18°C',water:'13°C',wind:'8',windLabel:'8–12 km/h',sun:'多雲轉晴'},
+    tides:[
+      {t:'07:05',type:'high',m:'3.4',note:'渡輪出發時間'},
+      {t:'13:20',type:'low',m:'1.1',note:''},
+      {t:'19:45',type:'high',m:'3.6',note:'抵達 Lyall Harbour'}
+    ],
+    stops:[
+      {type:'stop',name:'101 Parkside Dr, Coquitlam',note:'集合出發 · 行車 54 min · 49 km'},
+      {type:'ferry',name:'Tsawwassen Ferry Terminal',note:'出發 07:05 → 轉船 → 約 21:30 抵達 Saturna'},
+      {type:'stop',name:'Lyall Harbour',note:'步行 150 m'},
+      {type:'camp',name:'Arbutus Point Campground',note:'今晚住宿 · 安頓整理裝備'}
+    ],
+    info:'注意事項：渡輪需要預訂。攜帶皮艇者請提前確認車輛尺寸限制。渡輪餐廳有供餐。',
+    notes:'渡輪預訂確認號：_____\nBC Ferries booking ref：_____'
+  },
+  {
+    color:'#5db87c',date:'Sat, Jun 27',title:'Kayak 探索 Saturna 海岸',sub:'Lyall Harbour 下水 · 北岸 Winter Cove → 東岸 East Point 一帶',
+    wx:{air:'22°C',water:'13°C',wind:'6',windLabel:'5–10 km/h',sun:'晴朗'},
+    tides:[
+      {t:'06:30',type:'low',m:'0.8',note:'✓ 潮池 / 潮間帶觀察最佳'},
+      {t:'12:48',type:'high',m:'3.9',note:'高潮 · 部分礁石淹沒'},
+      {t:'18:55',type:'low',m:'1.0',note:'返航前退潮'}
+    ],
+    stops:[
+      {type:'kayak',name:'Lyall Harbour 下水',note:'政府碼頭 · 皮艇出租店就在旁'},
+      {type:'kayak',name:'Winter Cove 北岸',note:'平靜遮蔽水域 · 海豹、白頭海鵰、砂岩海岸'},
+      {type:'warn',name:'Boat Pass',note:'⚠ 狹窄強流 · 僅平潮通過，否則繞行'},
+      {type:'kayak',name:'East Point / Boiling Reef 方向',note:'賞鯨熱點 · 強流區，僅在能力與條件許可下接近'},
+      {type:'camp',name:'返回 Lyall Harbour',note:'估計返回 17:00 前'}
+    ],
+    info:'划槳探索日。建議分上下午兩段：上午低潮看潮池與潮間帶，午後沿岸觀察野生動物。East Point / Boiling Reef 一帶為強流區，Saturna 東岸是出名的高救援事故區，非經評估勿貿然前往。',
+    decisions:[
+      '出發前：查 windy.com 確認全日風速 < Bft 3；VHF 收聽天氣',
+      '低潮窗口（06:30 / 18:55）：安排潮池、潮間帶觀察',
+      'Boat Pass：非平潮時段不通過，改沿岸繞行',
+      'East Point：僅在平潮 + 風平浪靜時接近，否則於 Winter Cove 一帶折返'
+    ],
+    bailouts:'Veruna Bay · Russell Reef · Narvaez Bay（皆可登陸休息）',
+    notes:'探索重點：可在側欄開啟「探索圖層」查看野生動物、登陸點、海岸地形、潮汐點\n預計距離：彈性 · 估計 4–6 hr（含停留觀察）\n\n🥾 陸上選項：Brown Ridge 步道（環狀 6 km、爬升 186m、約 2–3 hr）— 划槳半日後下午健行，看全島最高俯瞰點'
+  },
+  {
+    color:'#7ec8f0',date:'Sun, Jun 28',title:'Kayak — Southside 南岸',sub:'Arbutus Point → 南岸海岸線 → 返回（~12 km）',
+    wx:{air:'21°C',water:'14°C',wind:'12',windLabel:'10–18 km/h',sun:'晴有微風'},
+    tides:[
+      {t:'06:14',type:'high',m:'3.8',note:'避開早潮浮木'},
+      {t:'12:33',type:'low',m:'0.9',note:'✓ 最佳出發窗口'},
+      {t:'19:08',type:'high',m:'3.5',note:'返回前評估'}
+    ],
+    stops:[
+      {type:'kayak',name:'Arbutus Point — 出發',note:'低潮後 1–2 hr 出發，利用漲潮'},
+      {type:'warn',name:'Boundary Pass 注意',note:'強潮流區 · 注意大型船隻航道'},
+      {type:'kayak',name:'南岸礁石帶',note:'貼岸划，避開開放水域'},
+      {type:'camp',name:'回到 Arbutus Point Campground',note:'估計返回時間 17:00 前'}
+    ],
+    info:'Bft 3（12–19 km/h）以上建議留岸。提前查詢 windy.com 確認 AM 天窗。',
+    decisions:[
+      '出發前：查 windy.com 確認 12:33 低潮前後風速 < Bft 3',
+      '途中：若風浪增強或起霧，於 Narvaez Bay 上岸等待',
+      '折返點：抵達 Boundary Pass 邊緣即折返，不進入強流區'
+    ],
+    bailouts:'East Point（公園腹地）· Narvaez Bay（遮蔽灣澳、BC Parks 營地）',
+    notes:'預計距離：~12 km · 估計 3–4 hr\n出發計劃時間：_____\n\n🥾 陸上選項：Brown Ridge 步道（環狀 6 km、爬升 186m、約 2–3 hr）— 划完南岸後下午健行'
+  },
+  {
+    color:'#7ec8f0',date:'Mon, Jun 29',title:'跨島 — Saturna → Pender',sub:'Navy Channel · Plumper Sound · ~18 km ⚠ 技術段',
+    wx:{air:'20°C',water:'14°C',wind:'10',windLabel:'8–15 km/h',sun:'晴偶雲'},
+    tides:[
+      {t:'07:02',type:'high',m:'3.9',note:'跨島前評估流向'},
+      {t:'13:20',type:'low',m:'0.7',note:'✓ 最佳跨島窗口'},
+      {t:'19:50',type:'high',m:'3.4',note:''}
+    ],
+    stops:[
+      {type:'kayak',name:'Lyall Harbour 出發',note:''},
+      {type:'warn',name:'Navy Channel 穿越',note:'留意來往渡輪 · BC Ferries 頻繁'},
+      {type:'kayak',name:'Plumper Sound',note:'開放水域 · Bft 3+ 取消跨島'},
+      {type:'camp',name:'North Pender 登陸',note:'確認 campsite 或前往 Airbnb'}
+    ],
+    info:'這是全程技術難度最高一段。若風速超過 Bft 3（19 km/h），強烈建議改搭渡輪。攜帶 VHF 無線電。',
+    decisions:[
+      '出發前：13:20 低潮為最佳跨島窗口；VHF 收聽天氣頻道',
+      'Go/No-Go：Plumper Sound 開放水域風速 ≥ Bft 4 → 取消，改渡輪',
+      '穿越時：與 BC Ferries 航道保持距離，全隊集結同行',
+      '備案：天氣不佳直接搭 Lyall Harbour → Otter Bay 渡輪'
+    ],
+    bailouts:'Saturna 西岸沿線小灣 · Port Browning, Pender（碼頭 + 補給）',
+    notes:'備案：若天氣不佳改搭 Lyall Harbour → Otter Bay 渡輪\n預計距離：~18 km · 估計 4–6 hr'
+  },
+  {
+    color:'#c8a86a',date:'Tue, Jun 30',title:'移往 Pender Island',sub:'Lyall Harbour → Otter Bay（渡輪）',
+    wx:{air:'22°C',water:'14°C',wind:'7',windLabel:'5–10 km/h',sun:'晴'},
+    tides:[
+      {t:'08:00',type:'high',m:'3.6',note:''},
+      {t:'14:15',type:'low',m:'0.8',note:''}
+    ],
+    stops:[
+      {type:'camp',name:'Arbutus Point Campground — 拔營',note:'步行 150 m 至碼頭'},
+      {type:'ferry',name:'Lyall Harbour → Otter Bay',note:'經 Mayne Island Village Bay · 確認班次'},
+      {type:'stop',name:'Otter Bay Ferry Terminal',note:'42 min · 14 km 車程'},
+      {type:'camp',name:'2204 Clam Bay Rd — Airbnb',note:'Perfect Meadow Cabin · airbnb.ca/rooms/13929339'}
+    ],
+    info:'Otter Bay 渡輪班次：Mon–Fri 06:15–07:30 及 10:30–12:35（轉 Mayne Island）。請提前確認最新時刻。',
+    notes:'Airbnb check-in 密碼：_____\n緊急聯絡：_____'
+  },
+  {
+    color:'#9b72c8',date:'Wed, Jul 1',title:'Pender Island — 自由活動',sub:'Mt Norman · Medicine Beach · 週六早市',
+    wx:{air:'23°C',water:'15°C',wind:'6',windLabel:'5–8 km/h',sun:'晴朗'},
+    tides:[
+      {t:'08:50',type:'high',m:'3.7',note:''},
+      {t:'15:00',type:'low',m:'0.6',note:'潮間帶觀察最佳'}
+    ],
+    stops:[
+      {type:'stop',name:'Medicine Beach 自然保護區',note:'潮間帶 · 輕鬆散步 · 海鳥觀察'},
+      {type:'stop',name:'Mt Norman Regional Park',note:'全島最高健行 2–3 hr · 360° 視野'},
+      {type:'stop',name:'Pender Island Saturday Market',note:'週六早市 · 當地農產品 · 手工藝'},
+      {type:'stop',name:'Thieves Bay Marina',note:'補給或休閒'}
+    ],
+    info:'',
+    notes:''
+  },
+  {
+    color:'#9b72c8',date:'Thu, Jul 2',title:'Pender Island — 自由活動',sub:'Beaumont Marine Park · Razor Point · 浮潛',
+    wx:{air:'23°C',water:'15°C',wind:'9',windLabel:'8–12 km/h',sun:'晴偶雲'},
+    tides:[
+      {t:'09:30',type:'high',m:'3.5',note:''},
+      {t:'15:45',type:'low',m:'0.7',note:'✓ 浮潛最佳時機'}
+    ],
+    stops:[
+      {type:'stop',name:'Beaumont Marine Park',note:'浮潛 · 皮艇 · 釣魚'},
+      {type:'stop',name:'Razor Point',note:'夕陽觀景 · 岩石海岸'},
+      {type:'stop',name:'2204 Clam Bay Rd',note:'收拾裝備 · 明日 17:15 渡輪返程'}
+    ],
+    info:'最後一個完整活動日。記得收拾裝備、確認明天渡輪時間。',
+    notes:''
+  },
+  {
+    color:'#c8a86a',date:'Fri, Jul 3',title:'返回 Tsawwassen',sub:'Otter Bay 17:15 → Tsawwassen 18:35',
+    wx:{air:'21°C',water:'15°C',wind:'11',windLabel:'10–15 km/h',sun:'晴'},
+    tides:[
+      {t:'10:10',type:'high',m:'3.4',note:''},
+      {t:'16:20',type:'low',m:'0.9',note:'渡輪出發前'}
+    ],
+    stops:[
+      {type:'stop',name:'2204 Clam Bay Rd — 退房',note:'Check-out · 清理垃圾'},
+      {type:'ferry',name:'Otter Bay → Tsawwassen',note:'出發 17:15 · 抵達 18:35'},
+      {type:'stop',name:'Tsawwassen',note:'接送安排 · 返家'}
+    ],
+    info:'',
+    notes:'接送安排：_____\n停車取車：_____'
+  }
+];
+
+const ROUTES = [
+  // Day 0 — 渡輪 Tsawwassen → Lyall Harbour (Saturna)
+  {coords:[[49.0054,-123.1314],[48.9400,-123.1700],[48.8700,-123.2400],[48.8200,-123.2100],[48.7950,-123.1980],[48.7878,-123.1956]],color:'#c8a86a',day:0,dash:[8,5]},
+  // Day 1 — Kayak 探索 Saturna 海岸（方向示意，沿北岸 → 東端水面）
+  {coords:[[48.7878,-123.1956],[48.8050,-123.1900],[48.8080,-123.1500],[48.8050,-123.1000],[48.7950,-123.0600],[48.7820,-123.0420]],color:'#5db87c',day:1,dash:[2,6],kayak:true,arrowNote:'北岸 → 東端 East Point'},
+  // Day 2 — Kayak 南岸（方向示意，非精確路線）
+  {coords:[[48.79754,-123.20001],[48.7780,-123.1500],[48.7680,-123.1050],[48.7620,-123.0750]],color:'#7ec8f0',day:2,dash:[2,6],kayak:true,arrowNote:'沿南岸向東 · 往返'},
+  // Day 3 — 跨島 Kayak（方向示意，非精確路線）
+  {coords:[[48.7878,-123.1956],[48.7960,-123.2400],[48.7880,-123.2800],[48.7700,-123.2780]],color:'#7ec8f0',day:3,dash:[2,6],kayak:true,arrowNote:'西行穿越 Plumper Sound → Pender'},
+  // Day 4 — 渡輪 Lyall Harbour → Otter Bay (Pender)
+  {coords:[[48.7878,-123.1956],[48.8000,-123.2600],[48.8350,-123.3050],[48.8100,-123.3100],[48.7950,-123.2983]],color:'#c8a86a',day:4,dash:[8,5]},
+  // Day 5 — Pender 自由活動（島上開車，陸路）
+  {coords:[[48.7700,-123.2700],[48.7780,-123.2900],[48.7900,-123.3000],[48.8050,-123.3150]],color:'#9b72c8',day:5,dash:[5,4]},
+  // Day 6 — Pender 自由活動（島上開車，陸路）
+  {coords:[[48.7700,-123.2700],[48.7600,-123.2950],[48.7480,-123.3050],[48.7550,-123.2800]],color:'#9b72c8',day:6,dash:[5,4]},
+  // Day 7 — 渡輪 Otter Bay → Tsawwassen
+  {coords:[[48.7950,-123.2983],[48.8400,-123.2900],[48.8900,-123.2300],[48.9500,-123.1700],[49.0054,-123.1314]],color:'#c8a86a',day:7,dash:[8,5]}
+];
+
+// 強潮流危險區（行前需特別研究、避開大潮峰值時段）
+const HAZARDS = [
+  {lat:48.7400,lng:-123.0900,label:'Boundary Pass',note:'強潮流 + 大型船隻航道 · 大潮時段避開',radius:1600},
+  {lat:48.8200,lng:-123.2550,label:'Plumper Sound',note:'跨島水域 · 留意風浪與能見度',radius:1300},
+  {lat:48.8095,lng:-123.2010,label:'Boat Pass (Winter Cove)',note:'狹窄強流 · 僅平潮時通過',radius:500}
+];
+
+// 建議上岸避難點（bail-out points，狀況不佳時可登陸休息）
+const BAILOUTS = [
+  {lat:48.7800,lng:-123.0504,label:'East Point',note:'可上岸 · 公園腹地'},
+  {lat:48.7680,lng:-123.1100,label:'Narvaez Bay',note:'遮蔽灣澳 · BC Parks 營地'},
+  {lat:48.7700,lng:-123.2780,label:'Port Browning (Pender)',note:'碼頭 + 補給 · 跨島目標點'}
+];
+
+// 海上探索標記 — 依實際環島划槳遊記（ourhomehas6wheels.com）整理
+// 資料來源：Bruce Holland 的 Saturna 三日環島划槳紀錄
+// cat: wildlife(野生動物) / land(登陸休息/營地) / coast(海岸地形) / tide(潮汐/強流)
+// 海上探索標記 — 從 saturna-route.kml 動態載入
+// 資料來源：實際環島划槳遊記（ourhomehas6wheels.com）的 Google My Maps 匯出
+// 載入時依關鍵字自動分類；陸上山頂（Brown Ridge, Mt Warburton Pike）和不相關渡輪段會被過濾掉
+let EXPLORE = [];
+let KML_ROUTES = []; // 從 KML 載入的 6 段環島真實航跡
+
+const EXPLORE_META = {
+  wildlife:{label:'野生動物熱點',color:'#e8a838',icon:'🦭'},
+  land:{label:'登陸 / 營地 / 休息',color:'#4caf72',icon:'⛵'},
+  coast:{label:'海岸地形 / 景點',color:'#b88a5a',icon:'🪨'},
+  tide:{label:'潮汐 / 強流',color:'#5aa8d8',icon:'🌊'}
+};
+
+const MARKERS = [
+  {lat:49.0054,lng:-123.1314,color:'#c8a86a',label:'Tsawwassen Ferry Terminal',days:[0,7]},
+  {lat:48.7878,lng:-123.1956,color:'#c8a86a',label:'Lyall Harbour（下水點）',days:[0,1,2,3,4,7]},
+  {lat:48.79754,lng:-123.20001,color:'#5db87c',label:'🏕 Arbutus Point Campground（住宿 6/26–6/30）',days:[0,1,2,3,4],lodging:true},
+  {lat:48.7950,lng:-123.2983,color:'#c8a86a',label:'Otter Bay Ferry Terminal',days:[4,5,6,7]},
+  {lat:48.7700,lng:-123.2700,color:'#9b72c8',label:'Clam Bay Rd Airbnb',days:[4,5,6,7]},
+  {lat:48.7500,lng:-123.2750,color:'#9b72c8',label:'Beaumont Marine Park',days:[6]},
+  {lat:48.7820,lng:-123.3150,color:'#9b72c8',label:'Medicine Beach',days:[5]},
+];
+
+const tileUrls = {
+  topo:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+  sat:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  osm:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+};
+
+let currentLayer='topo', gpxLayer=null, activeDay=-1;
+let routeLayers=[], markerLayers=[], badgeLayers=[], hazardLayers=[], bailoutLayers=[], arrowLayers=[], exploreLayers=[];
+const activeCats=new Set();
+
+const map = L.map('map',{zoomControl:false,zoomSnap:0.25,zoomAnimation:true,fadeAnimation:true,markerZoomAnimation:true}).setView([48.84,-123.22],11);
+L.control.zoom({position:'bottomright'}).addTo(map);
+let tileLayer = L.tileLayer(tileUrls.osm,{maxZoom:17,attribution:'© OSM'}).addTo(map);
+
+setTimeout(()=>map.invalidateSize(),200);
+window.addEventListener('resize',()=>map.invalidateSize());
+
+function switchLayer(t){
+  map.removeLayer(tileLayer);
+  const attrs={topo:'© Esri',sat:'© Esri',osm:'© OSM'};
+  tileLayer=L.tileLayer(tileUrls[t],{maxZoom:17,attribution:attrs[t]}).addTo(map);
+  ['osm'].forEach(x=>{const b=document.getElementById('btn-'+x);if(b)b.classList.toggle('active',x===t);});
+}
+
+function makeIcon(color,size,pulse=false){
+  const ring=pulse?`<div style="position:absolute;inset:-5px;border-radius:50%;border:2px solid ${color};opacity:0.5;animation:pulse 2s infinite"></div>`:'';
+  return L.divIcon({
+    className:'',
+    html:`<div style="position:relative;width:${size}px;height:${size}px">${ring}<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.9);box-shadow:0 1px 8px rgba(0,0,0,0.6);transition:all 0.2s ease"></div></div>`,
+    iconSize:[size,size],iconAnchor:[size/2,size/2]
+  });
+}
+
+function makeNumIcon(color,num,size=26,dim=false){
+  return L.divIcon({
+    className:'',
+    html:`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:${Math.round(size*0.5)}px;color:#fff;opacity:${dim?0.35:1};transition:all 0.2s ease">${num}</div>`,
+    iconSize:[size,size],iconAnchor:[size/2,size/2]
+  });
+}
+
+function routeMidpoint(coords){
+  const i=Math.floor(coords.length/2);
+  if(coords.length%2===1) return coords[i];
+  const a=coords[i-1],b=coords[i];
+  return [(a[0]+b[0])/2,(a[1]+b[1])/2];
+}
+
+function buildLayers(){
+  ROUTES.forEach(r=>{
+    const opts={color:r.color,weight:2.5,opacity:0.55,lineJoin:'round',lineCap:'round'};
+    if(r.dash) opts.dashArray=r.dash;
+    const poly=L.polyline(r.coords,opts);
+    poly._dayIdx=r.day;
+    poly.on('click',()=>selectDay(r.day));
+    poly.on('mouseover',()=>{ if(activeDay<0||activeDay===r.day) poly.setStyle({weight:5,opacity:1}); map.getContainer().style.cursor='pointer'; });
+    poly.on('mouseout',()=>{ styleRoute(poly,r.day); map.getContainer().style.cursor=''; });
+    poly.addTo(map);
+    routeLayers.push(poly);
+  });
+
+  ROUTES.forEach(r=>{
+    const mid=routeMidpoint(r.coords);
+    const badge=L.marker(mid,{icon:makeNumIcon(r.color,r.day+1,26),zIndexOffset:300,riseOnHover:true});
+    badge._dayIdx=r.day;
+    badge.on('click',()=>selectDay(r.day));
+    badge.on('mouseover',()=>{ badge.setIcon(makeNumIcon(r.color,r.day+1,32)); map.getContainer().style.cursor='pointer'; });
+    badge.on('mouseout',()=>{ styleBadge(badge); map.getContainer().style.cursor=''; });
+    badge.addTo(map);
+    badgeLayers.push(badge);
+  });
+
+  MARKERS.forEach(m=>{
+    let icon;
+    if(m.lodging){
+      // 住宿營地：較大的綠色帳篷圖示，明顯區別於 KML 參考點
+      icon=L.divIcon({className:'',
+        html:`<div style="width:30px;height:30px;border-radius:50%;background:#5db87c;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1">🏕</div>`,
+        iconSize:[30,30],iconAnchor:[15,15]});
+    }else{
+      icon=makeIcon(m.color,9);
+    }
+    const mk=L.marker([m.lat,m.lng],{icon,opacity:0.95,riseOnHover:true,zIndexOffset:m.lodging?400:0})
+      .bindPopup(`<div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:#1a2a3a;padding:2px 0"><strong>${m.label}</strong></div>`,{maxWidth:240,closeButton:false});
+    mk._markerData=m;
+    mk.on('mouseover',()=>mk.openPopup());
+    mk.on('mouseout',()=>mk.closePopup());
+    mk.addTo(map);
+    markerLayers.push(mk);
+  });
+
+  // 強潮流危險區（紅色圓圈）
+  HAZARDS.forEach(h=>{
+    const circle=L.circle([h.lat,h.lng],{
+      radius:h.radius,color:'#e06050',weight:1.5,opacity:0.7,
+      fillColor:'#e06050',fillOpacity:0.1,dashArray:[4,4]
+    }).bindPopup(`<div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:#1a2a3a"><strong style="color:#c0392b">⚠ ${h.label}</strong><br><span style="font-size:12px;color:#555">${h.note}</span></div>`,{maxWidth:220,closeButton:false});
+    circle.on('mouseover',()=>circle.openPopup());
+    circle.addTo(map);
+    hazardLayers.push(circle);
+  });
+
+  // 上岸避難點（綠色三角錨點）
+  BAILOUTS.forEach(b=>{
+    const icon=L.divIcon({className:'',
+      html:`<div style="width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:13px solid #4caf72;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5))"></div>`,
+      iconSize:[14,13],iconAnchor:[7,13]});
+    const mk=L.marker([b.lat,b.lng],{icon,opacity:0.9,riseOnHover:true})
+      .bindPopup(`<div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:#1a2a3a"><strong style="color:#2e7d4f">⚓ 避難上岸點：${b.label}</strong><br><span style="font-size:12px;color:#555">${b.note}</span></div>`,{maxWidth:220,closeButton:false});
+    mk.on('mouseover',()=>mk.openPopup());
+    mk.on('mouseout',()=>mk.closePopup());
+    mk.addTo(map);
+    bailoutLayers.push(mk);
+  });
+
+  // 划槳日方向箭頭（沿線段中點放方向符號，示意走向）
+  ROUTES.filter(r=>r.kayak).forEach(r=>{
+    for(let i=0;i<r.coords.length-1;i++){
+      const a=r.coords[i],b=r.coords[i+1];
+      const mid=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+      const ang=Math.atan2(b[0]-a[0],b[1]-a[1])*180/Math.PI;
+      const icon=L.divIcon({className:'',
+        html:`<div style="transform:rotate(${-ang}deg);font-size:18px;color:${r.color};text-shadow:0 1px 3px rgba(0,0,0,0.6);line-height:1">➤</div>`,
+        iconSize:[18,18],iconAnchor:[9,9]});
+      const arrow=L.marker(mid,{icon,interactive:false,zIndexOffset:150});
+      arrow._dayIdx=r.day;
+      arrow.addTo(map);
+      arrowLayers.push(arrow);
+    }
+  });
+
+  // 探索標記（四類）— 建立後預設隱藏，由側欄開關控制
+  EXPLORE.forEach(e=>{
+    const meta=EXPLORE_META[e.cat];
+    const icon=L.divIcon({className:'',
+      html:`<div style="width:24px;height:24px;border-radius:50%;background:${meta.color};border:2px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1">${meta.icon}</div>`,
+      iconSize:[24,24],iconAnchor:[12,12]});
+    const mk=L.marker([e.lat,e.lng],{icon,riseOnHover:true,zIndexOffset:250})
+      .bindPopup(`<div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:#1a2a3a;max-width:200px"><strong style="color:${meta.color==='#e8a838'?'#b8841a':meta.color}">${meta.icon} ${e.label}</strong><br><span style="font-size:12px;color:#555;line-height:1.5">${e.note}</span></div>`,{maxWidth:230,closeButton:false});
+    mk._cat=e.cat;
+    mk.on('mouseover',()=>mk.openPopup());
+    mk.on('mouseout',()=>mk.closePopup());
+    // 預設不加入地圖
+    exploreLayers.push(mk);
+  });
+}
+
+function styleBadge(badge){
+  const day=badge._dayIdx;
+  const r=ROUTES.find(x=>x.day===day);
+  const dim=activeDay>=0&&day!==activeDay;
+  const size=activeDay===day?32:26;
+  badge.setIcon(makeNumIcon(r.color,day+1,size,dim));
+  badge.setZIndexOffset(activeDay===day?500:300);
+}
+
+function styleRoute(poly,day){
+  const r=ROUTES.find(x=>x.day===day);
+  const isKayak=r&&r.kayak;
+  if(activeDay<0){
+    poly.setStyle({weight:isKayak?2:2.5,opacity:isKayak?0.4:0.55});
+  }else if(day===activeDay){
+    poly.setStyle({weight:isKayak?2.5:4,opacity:isKayak?0.7:1});
+  }else{
+    poly.setStyle({weight:1.5,opacity:0.1});
+  }
+}
+
+function refreshStyles(){
+  routeLayers.forEach(poly=>styleRoute(poly,poly._dayIdx));
+  badgeLayers.forEach(badge=>styleBadge(badge));
+  arrowLayers.forEach(a=>{
+    const on=activeDay<0||a._dayIdx===activeDay;
+    a.setOpacity(on?0.9:0.1);
+  });
+  markerLayers.forEach(mk=>{
+    const m=mk._markerData;
+    const active=activeDay<0||m.days.includes(activeDay);
+    if(m.lodging){
+      // 住宿圖示固定，只調整透明度
+      mk.setOpacity(active?1:0.35);
+      mk.setZIndexOffset(active?500:300);
+    }else{
+      const size=active?(activeDay>=0?13:9):7;
+      mk.setIcon(makeIcon(m.color,size,active&&activeDay>=0));
+      mk.setOpacity(active?1:0.18);
+      mk.setZIndexOffset(active?200:0);
+    }
+  });
+}
+
+// === KML 載入器：從 saturna-route.kml 讀真實點位、依關鍵字分類 ===
+// 過濾掉陸上山頂與不適用的 Swartz Bay 渡輪段
+function classifyPoint(name){
+  const n=name.toLowerCase();
+  // 排除陸上點和不相關
+  if(n.includes('brown ridge')||n.includes('warburton')||n.includes('swartz bay')||
+     n.includes('lyall harbour, capital')||n.includes('terminal')) return null;
+  // 營地
+  if(n.includes('camp')||n.includes('campsite')||n.includes('campground')) return 'land';
+  // 強流 / 潮汐
+  if(n.includes('boiling reef')||n.includes('reef harbour')) return 'tide';
+  // 野生動物
+  if(n.includes('belle chain')) return 'wildlife';
+  // 其他海角、岬、灣 = 海岸地形
+  if(n.includes('point')||n.includes('head')||n.includes('bluff')||
+     n.includes('bay')||n.includes('break')) return 'coast';
+  return 'coast'; // 預設
+}
+
+function classifyRoute(name){
+  // 6 段環島划槳路線都歸入海上路線
+  if(/lyall|cabbage|east point|narvaez|thompson/i.test(name)) return 'kayak-real';
+  // Swartz Bay 渡輪段 — 不適用（你是從 Tsawwassen 出發）
+  return null;
+}
+
+async function loadKML(){
+  try{
+    const res=await fetch('saturna-route.kml');
+    if(!res.ok) throw new Error('KML 載入失敗：'+res.status);
+    const text=await res.text();
+    const xml=new DOMParser().parseFromString(text,'application/xml');
+    const placemarks=xml.getElementsByTagName('Placemark');
+    let pointCount=0, routeCount=0;
+
+    Array.from(placemarks).forEach(pm=>{
+      const nameEl=pm.getElementsByTagName('name')[0];
+      const name=nameEl?nameEl.textContent.trim():'(unnamed)';
+      const descEl=pm.getElementsByTagName('description')[0];
+      const desc=descEl?descEl.textContent.replace(/<[^>]+>/g,'').trim():'';
+
+      const pt=pm.getElementsByTagName('Point')[0];
+      const ln=pm.getElementsByTagName('LineString')[0];
+
+      if(pt){
+        const coords=pt.getElementsByTagName('coordinates')[0].textContent.trim().split(',');
+        const lng=parseFloat(coords[0]), lat=parseFloat(coords[1]);
+        const cat=classifyPoint(name);
+        if(cat){
+          EXPLORE.push({cat,lat,lng,label:name,note:desc||'（KML 來源點）'});
+          pointCount++;
+        }
+      }else if(ln){
+        const cat=classifyRoute(name);
+        if(cat==='kayak-real'){
+          const coordStr=ln.getElementsByTagName('coordinates')[0].textContent.trim();
+          const pts=coordStr.split(/\s+/).map(c=>{
+            const p=c.split(',');
+            return [parseFloat(p[1]),parseFloat(p[0])];
+          }).filter(p=>!isNaN(p[0]));
+          if(pts.length>1){
+            KML_ROUTES.push({name,coords:pts});
+            routeCount++;
+          }
+        }
+      }
+    });
+
+    console.log(`✓ KML 載入：${pointCount} 個探索點、${routeCount} 段真實航跡`);
+
+    // 把真實航跡畫到地圖（黃色實線 + 半透明，當作參考底圖）
+    KML_ROUTES.forEach(r=>{
+      const poly=L.polyline(r.coords,{
+        color:'#f0c050',weight:2.5,opacity:0.65,lineJoin:'round',lineCap:'round'
+      }).bindPopup(`<div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:#1a2a3a"><strong>環島參考航跡</strong><br>${r.name}<br><span style="color:#777;font-size:11px">來源：實際划槳遊記 GPS 紀錄</span></div>`,{maxWidth:240,closeButton:false});
+      poly.on('mouseover',()=>poly.openPopup());
+      poly.addTo(map);
+    });
+  }catch(err){
+    console.error('KML 載入錯誤：',err);
+    document.getElementById('gpx-stat').textContent='⚠ saturna-route.kml 未找到（請與網頁放在同資料夾）';
+  }
+}
+
+// === GPX 載入器：Brown Ridge 健行步道 ===
+// 來源：AllTrails 匯出的真實 GPS 軌跡
+async function loadHikingTrail(){
+  try{
+    const res=await fetch('brown-ridge.gpx');
+    if(!res.ok) throw new Error('GPX 載入失敗：'+res.status);
+    const text=await res.text();
+    const gpx=new DOMParser().parseFromString(text,'application/xml');
+    const pts=Array.from(gpx.querySelectorAll('trkpt')).map(p=>
+      [parseFloat(p.getAttribute('lat')),parseFloat(p.getAttribute('lon'))]
+    ).filter(p=>!isNaN(p[0]));
+
+    if(pts.length<2) return;
+
+    // 算距離與爬升
+    let dist=0;
+    for(let i=1;i<pts.length;i++){
+      const R=6371,a=pts[i-1],b=pts[i];
+      const dLat=(b[0]-a[0])*Math.PI/180,dLon=(b[1]-a[1])*Math.PI/180;
+      const x=Math.sin(dLat/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dLon/2)**2;
+      dist+=R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+    }
+    const eles=Array.from(gpx.querySelectorAll('trkpt ele')).map(e=>parseFloat(e.textContent));
+    const minE=Math.min(...eles),maxE=Math.max(...eles);
+
+    // 步道線（暗紅色實線，明顯區別於水路）
+    const trail=L.polyline(pts,{
+      color:'#b85040',weight:3,opacity:0.85,lineJoin:'round',lineCap:'round'
+    }).bindPopup(`<div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:#1a2a3a;max-width:240px"><strong style="color:#9c3a2a">🥾 Brown Ridge Trail</strong><br><span style="font-size:12px;color:#555;line-height:1.6">距離：${dist.toFixed(2)} km（環狀）<br>海拔：${minE.toFixed(0)}m – ${maxE.toFixed(0)}m<br>爬升：約 ${(maxE-minE).toFixed(0)}m<br>來源：AllTrails GPX</span></div>`,{maxWidth:260,closeButton:false});
+    trail.on('mouseover',()=>trail.openPopup());
+    trail.addTo(map);
+
+    // 步道起點標記
+    const trailheadIcon=L.divIcon({className:'',
+      html:`<div style="width:26px;height:26px;border-radius:50%;background:#b85040;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1">🥾</div>`,
+      iconSize:[26,26],iconAnchor:[13,13]});
+    const trailhead=L.marker(pts[0],{icon:trailheadIcon,riseOnHover:true,zIndexOffset:350})
+      .bindPopup(`<div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:#1a2a3a"><strong style="color:#9c3a2a">🥾 Brown Ridge 步道起點</strong><br><span style="font-size:12px;color:#555">Saturna 全島最高俯瞰點 · 約 2–3 hr</span></div>`,{maxWidth:240,closeButton:false});
+    trailhead.on('mouseover',()=>trailhead.openPopup());
+    trailhead.on('mouseout',()=>trailhead.closePopup());
+    trailhead.addTo(map);
+
+    console.log(`✓ GPX 載入：Brown Ridge 步道 ${dist.toFixed(2)} km、爬升 ${(maxE-minE).toFixed(0)}m`);
+  }catch(err){
+    console.error('GPX 載入錯誤：',err);
+  }
+}
+
+// 先載 KML、GPX，再 build layers
+Promise.all([loadKML(),loadHikingTrail()]).then(()=>{
+  buildLayers();
+  refreshStyles();
+});
+
+function toggleCat(cat){
+  const btn=document.getElementById('cat-'+cat);
+  if(activeCats.has(cat)){
+    activeCats.delete(cat);
+    btn.classList.remove('on');
+    exploreLayers.filter(mk=>mk._cat===cat).forEach(mk=>map.removeLayer(mk));
+  }else{
+    activeCats.add(cat);
+    btn.classList.add('on');
+    exploreLayers.filter(mk=>mk._cat===cat).forEach(mk=>mk.addTo(map));
+  }
+}
+
+function selectDay(idx){
+  if(activeDay===idx){ closeDetail(); return; }
+  document.querySelectorAll('.day-row').forEach((r,i)=>r.classList.toggle('active',i===idx));
+  activeDay=idx;
+  refreshStyles();
+  showDetail(idx);
+  const pts=ROUTES.filter(r=>r.day===idx).flatMap(r=>r.coords);
+  const mPts=MARKERS.filter(m=>m.days.includes(idx)).map(m=>[m.lat,m.lng]);
+  const allPts=[...pts,...mPts];
+  if(allPts.length>1){
+    map.flyToBounds(L.latLngBounds(allPts.map(p=>L.latLng(p[0],p[1]))),{
+      paddingTopLeft:[360,60],
+      paddingBottomRight:[40,idx===0||idx===7?180:80],
+      duration:0.9,
+      easeLinearity:0.25
+    });
+  }
+}
+
+function windPercent(kph){return Math.min(100,Math.round(kph/60*100))}
+
+function showDetail(idx){
+  const d=DAYS[idx];
+  document.getElementById('dp-dot').style.background=d.color;
+  document.getElementById('dp-date').textContent=d.date;
+  document.getElementById('dp-title-text').textContent=d.title;
+  document.getElementById('dp-sub').textContent=d.sub;
+
+  const spd=parseInt(d.wx.wind)||10;
+  const pct=windPercent(spd);
+  const bft=spd<12?'Bft 1–2 · 平靜，可划':spd<20?'Bft 3 · 適合，留意浪向':spd<29?'Bft 4 · 謹慎，跨島避開':spd<39?'Bft 5 · 建議留岸':'Bft 5+ · 禁止出發';
+  const bftColor=spd<12?'#5db87c':spd<20?'#c8d870':spd<29?'#c8a86a':'#c87060';
+
+  let h='';
+  h+=`<div class="dp-sub-lbl">天氣預報（7月均值）</div>`;
+  h+=`<div class="wx-row">
+    <div class="wx-pill"><div class="wx-ico">🌡</div><div class="wx-val">${d.wx.air}</div><div class="wx-lbl">氣溫</div></div>
+    <div class="wx-pill"><div class="wx-ico">🌊</div><div class="wx-val">${d.wx.water}</div><div class="wx-lbl">水溫</div></div>
+    <div class="wx-pill"><div class="wx-ico">💨</div><div class="wx-val">${d.wx.windLabel}</div><div class="wx-lbl">風速</div></div>
+    <div class="wx-pill"><div class="wx-ico">☀️</div><div class="wx-val" style="font-size:10px;line-height:1.3">${d.wx.sun}</div><div class="wx-lbl">天況</div></div>
+  </div>`;
+
+  h+=`<div class="wind-bar-wrap">
+    <div class="wind-row">
+      <span class="wind-safe">● 安全</span>
+      <span class="wind-caution">● 留意</span>
+      <span class="wind-danger">● 危險</span>
+    </div>
+    <div class="wind-track">
+      <div class="wind-seg-s"></div>
+      <div class="wind-seg-c"></div>
+      <div class="wind-seg-d"></div>
+    </div>
+    <div class="wind-marker">
+      <div class="wind-needle" style="left:${pct}%"></div>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:${bftColor};margin-top:2px">${d.wx.windLabel} — ${bft}</div>
+  </div>`;
+
+  if(d.tides.length){
+    h+=`<div class="dp-sub-lbl">潮汐 — East Point Station #7460</div>`;
+    h+=`<table class="tide-tbl"><thead><tr><th>時間</th><th>高/低潮</th><th>高度</th><th>建議</th></tr></thead><tbody>`;
+    d.tides.forEach(t=>{
+      const cls=t.type==='high'?'tide-high':'tide-low';
+      const lbl=t.type==='high'?'高潮▲':'低潮▼';
+      const noteEl=t.note?`<span class="${t.note.startsWith('✓')?'tide-ok':'tide-warn'}">${t.note}</span>`:'—';
+      h+=`<tr><td>${t.t}</td><td class="${cls}">${lbl}</td><td>${t.m} m</td><td>${noteEl}</td></tr>`;
+    });
+    h+=`</tbody></table>`;
+    h+=`<div style="font-size:9px;color:#1a3a50;margin-bottom:8px;font-family:'IBM Plex Mono',monospace">* 示例格式。實際數值請至 tides.gc.ca 查詢</div>`;
+  }
+
+  h+=`<div class="dp-sub-lbl">停靠 & 地點</div>`;
+  h+=`<ul class="stop-list">`;
+  d.stops.forEach(s=>{
+    const cls=s.type==='ferry'?'ferry':s.type==='camp'?'camp':'';
+    h+=`<li class="stop-item"><div class="stop-n ${cls}"></div><div><div class="sn">${s.name}</div>${s.note?`<div class="ss">${s.note}</div>`:''}</div></li>`;
+  });
+  h+=`</ul>`;
+
+  if(d.info){
+    const isWarn=d.info.includes('危險')||d.info.includes('建議')||d.info.includes('技術');
+    h+=`<div class="${isWarn?'warn-box':'safe-box'}">${d.info}</div>`;
+  }
+
+  if(d.decisions&&d.decisions.length){
+    h+=`<div class="dp-sub-lbl" style="margin-top:10px">關鍵決策點</div>`;
+    h+=`<ul class="decision-list">`;
+    d.decisions.forEach(dec=>{ h+=`<li class="decision-item">${dec}</li>`; });
+    h+=`</ul>`;
+  }
+
+  if(d.bailouts){
+    h+=`<div class="dp-sub-lbl" style="margin-top:10px">⚓ 避難上岸點</div>`;
+    h+=`<div class="bailout-box">${d.bailouts}</div>`;
+  }
+
+  h+=`<div class="dp-sub-lbl" style="margin-top:10px">備注</div>`;
+  h+=`<textarea class="dp-notes" placeholder="添加備注、確認號、聯絡資訊…">${d.notes||''}</textarea>`;
+
+  document.getElementById('dp-body').innerHTML=h;
+  document.getElementById('detail-panel').classList.add('visible');
+}
+
+function closeDetail(){
+  document.getElementById('detail-panel').classList.remove('visible');
+  document.querySelectorAll('.day-row').forEach(r=>r.classList.remove('active'));
+  activeDay=-1;
+  refreshStyles();
+  map.flyToBounds(L.latLngBounds(MARKERS.map(m=>[m.lat,m.lng])),{paddingTopLeft:[360,60],paddingBottomRight:[40,80],duration:0.8});
+}
+
+function previewDay(idx){
+  if(activeDay>=0) return;
+  routeLayers.forEach(poly=>{
+    if(poly._dayIdx===idx) poly.setStyle({weight:4.5,opacity:1});
+    else poly.setStyle({weight:1.5,opacity:0.15});
+  });
+  badgeLayers.forEach(badge=>{
+    const r=ROUTES.find(x=>x.day===badge._dayIdx);
+    const on=badge._dayIdx===idx;
+    badge.setIcon(makeNumIcon(r.color,badge._dayIdx+1,on?32:26,!on));
+    badge.setZIndexOffset(on?500:300);
+  });
+  markerLayers.forEach(mk=>{
+    const on=mk._markerData.days.includes(idx);
+    mk.setOpacity(on?1:0.2);
+  });
+}
+function clearPreview(){
+  if(activeDay>=0) return;
+  refreshStyles();
+}
+
+document.querySelectorAll('.day-row').forEach((row,i)=>{
+  row.addEventListener('mouseenter',()=>previewDay(i));
+  row.addEventListener('mouseleave',clearPreview);
+});
+
+let sidebarCollapsed=false;
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  const btn=document.getElementById('toggle-btn');
+  const dp=document.getElementById('detail-panel');
+  sidebarCollapsed=!sidebarCollapsed;
+  sb.classList.toggle('collapsed',sidebarCollapsed);
+  btn.innerHTML=sidebarCollapsed?'&#8250;':'&#8249;';
+  dp.style.left=sidebarCollapsed?'34px':'340px';
+}
+
+function loadGPX(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const gpx=new DOMParser().parseFromString(ev.target.result,'application/xml');
+    if(gpxLayer)map.removeLayer(gpxLayer);
+    const pts=Array.from(gpx.querySelectorAll('trkpt'))
+      .map(p=>[parseFloat(p.getAttribute('lat')),parseFloat(p.getAttribute('lon'))])
+      .filter(p=>!isNaN(p[0])&&!isNaN(p[1]));
+    if(pts.length>1){
+      gpxLayer=L.polyline(pts,{color:'#f0c050',weight:3,opacity:0.9,dashArray:[6,3]}).addTo(map);
+      map.fitBounds(gpxLayer.getBounds(),{padding:[60,60]});
+      let dist=0;
+      for(let i=1;i<pts.length;i++){
+        const R=6371,a=pts[i-1],b=pts[i];
+        const dLat=(b[0]-a[0])*Math.PI/180,dLon=(b[1]-a[1])*Math.PI/180;
+        const x=Math.sin(dLat/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dLon/2)**2;
+        dist+=R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+      }
+      document.getElementById('gpx-stat').textContent=`✓ ${file.name} · ${dist.toFixed(1)} km`;
+      document.getElementById('total-km').textContent=dist.toFixed(0);
+    }
+    Array.from(gpx.querySelectorAll('wpt')).forEach(w=>{
+      const lat=parseFloat(w.getAttribute('lat')),lng=parseFloat(w.getAttribute('lon'));
+      const nm=w.querySelector('name')?.textContent||'';
+      if(!isNaN(lat))L.marker([lat,lng],{icon:makeIcon('#f0c050',10)}).addTo(map).bindPopup(`<strong>${nm}</strong>`);
+    });
+  };
+  reader.readAsText(file);
+}
+
+let aiOpen=false;
+function toggleAI(){
+  aiOpen=!aiOpen;
+  document.getElementById('ai-panel').classList.toggle('visible',aiOpen);
+}
+
+const TRIP_CONTEXT=`你是一個專業的海洋皮艇嚮導和行程助手，對 BC Gulf Islands（Saturna Island 和 Pender Island）非常熟悉。
+行程概要：
+- Jun 26：從 Coquitlam 出發，渡輪 Tsawwassen → Lyall Harbour (Saturna)，住 Arbutus Point Campground
+- Jun 27：探索 Saturna Island 陸路（East Point Light、Winter Point、Brown Ridge、Thomson Park）
+- Jun 28：Kayak Saturna 南岸 ~12 km，回到 Arbutus Point
+- Jun 29：跨島 Kayak，Saturna → Pender via Navy Channel，~18 km（技術段）
+- Jun 30：渡輪 Lyall Harbour → Otter Bay (Pender)，住 2204 Clam Bay Rd Airbnb
+- Jul 1–2：Pender Island 自由活動（Mt Norman、Medicine Beach、Beaumont Marine Park）
+- Jul 3：渡輪 Otter Bay → Tsawwassen 17:15，返回
+7月 Gulf Islands 天氣：氣溫 20–23°C，水溫 13–15°C，風速通常 8–20 km/h，日照時間長。
+安全要點：水溫低（冷水衝擊危險），必須穿 PFD，Bft 4 以上留岸，跨島需 VHF 無線電。
+用繁體中文回答，簡潔但完整，著重實用安全資訊。`;
+
+async function askAI(q){
+  document.getElementById('ai-input').value=q;
+  await sendAI();
+}
+
+async function sendAI(){
+  const input=document.getElementById('ai-input');
+  const q=input.value.trim();if(!q)return;
+  input.value='';
+
+  const msgs=document.getElementById('ai-messages');
+  const uDiv=document.createElement('div');
+  uDiv.className='msg user';uDiv.textContent=q;msgs.appendChild(uDiv);
+
+  const tDiv=document.createElement('div');
+  tDiv.className='msg ai typing';tDiv.textContent='思考中…';
+  msgs.appendChild(tDiv);msgs.scrollTop=msgs.scrollHeight;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:TRIP_CONTEXT,
+        messages:[{role:'user',content:q}]
+      })
+    });
+    const data=await res.json();
+    const text=data.content?.[0]?.text||'抱歉，無法獲得回答。';
+    tDiv.className='msg ai';
+    tDiv.textContent=text;
+  }catch(err){
+    tDiv.className='msg ai';
+    tDiv.textContent='連線失敗，請確認網路後重試。';
+  }
+  msgs.scrollTop=msgs.scrollHeight;
+}
+</script>
+</body>
+</html>
