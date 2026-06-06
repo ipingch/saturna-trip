@@ -223,7 +223,7 @@ html,body{height:100%;overflow:hidden;font-family:'IBM Plex Sans',sans-serif;bac
     <div class="day-row" onclick="selectDay(0)"><div class="day-dot" style="background:#c8a86a">1</div><div class="day-info"><div class="day-name">Jun 26（五）出發</div><div class="day-sub">Tsawwassen → Lyall Harbour</div><div class="day-dist">渡輪日 · 07:05 出發</div></div></div>
     <div class="day-row" onclick="selectDay(1)"><div class="day-dot" style="background:#5db87c">2</div><div class="day-info"><div class="day-name">Jun 27（六）Kayak 探索 Saturna</div><div class="day-sub">Winter Cove → East Point 海岸</div><div class="day-dist">水路 · 探索日</div></div></div>
     <div class="day-row" onclick="selectDay(2)"><div class="day-dot" style="background:#7ec8f0">3</div><div class="day-info"><div class="day-name">Jun 28（日）Kayak 南岸</div><div class="day-sub">Arbutus Point → Southside 海岸線</div><div class="day-dist">水路 · ~12 km</div></div></div>
-    <div class="day-row" onclick="selectDay(3)"><div class="day-dot" style="background:#7ec8f0">4</div><div class="day-info"><div class="day-name">Jun 29（一）跨島段</div><div class="day-sub">Saturna → Pender via Navy Channel</div><div class="day-dist">水路 · ~18 km ⚠ 技術段</div></div></div>
+    <div class="day-row" onclick="selectDay(3)"><div class="day-dot" style="background:#7ec8f0">4</div><div class="day-info"><div class="day-name">Jun 29（一）Kayak 朝 Mayne 方向</div><div class="day-sub">Plumper Sound 北部水域 · 不登陸</div><div class="day-dist">水路 · 探索日</div></div></div>
     <div class="day-row" onclick="selectDay(4)"><div class="day-dot" style="background:#c8a86a">5</div><div class="day-info"><div class="day-name">Jun 30（二）移往 Pender</div><div class="day-sub">Lyall Harbour → Otter Bay</div><div class="day-dist">渡輪日</div></div></div>
     <div class="day-row" onclick="selectDay(5)"><div class="day-dot" style="background:#9b72c8">6</div><div class="day-info"><div class="day-name">Jul 1（三）Pender 自由</div><div class="day-sub">Mt Norman · Medicine Beach</div><div class="day-dist">自由活動日</div></div></div>
     <div class="day-row" onclick="selectDay(6)"><div class="day-dot" style="background:#9b72c8">7</div><div class="day-info"><div class="day-name">Jul 2（四）Pender 自由</div><div class="day-sub">Beaumont Marine Park · Razor Point</div><div class="day-dist">自由活動日</div></div></div>
@@ -291,12 +291,12 @@ html,body{height:100%;overflow:hidden;font-family:'IBM Plex Sans',sans-serif;bac
     <div class="msg ai">嗨！我是你的行程助手。可以問我關於 Saturna & Pender 的任何問題，包括潮汐時機、划槳路線、天氣判斷或裝備建議。</div>
   </div>
   <div class="ai-suggestions">
-    <div class="ai-chip" onclick="askAI('跨島段安全嗎？風力要達到多少才不能划？')">跨島安全條件？</div>
+    <div class="ai-chip" onclick="askAI('朝 Mayne 方向划槳安全嗎？風力要達到多少才不能划？')">划槳安全條件？</div>
     <div class="ai-chip" onclick="askAI('7月Gulf Islands划槳需要wetsuit嗎？水溫多少？')">需要 wetsuit？</div>
     <div class="ai-chip" onclick="askAI('Jun 28 低潮 12:33 出發，南岸路線大概怎麼划比較好？')">南岸路線建議</div>
     <div class="ai-chip" onclick="askAI('Boundary Pass 的潮流有多強？什麼時候最危險？')">Boundary Pass 危險嗎？</div>
     <div class="ai-chip" onclick="askAI('Arbutus Point Campground 有什麼設施？需要預訂嗎？')">露營地資訊</div>
-    <div class="ai-chip" onclick="askAI('如果天氣變差，Jun 29 跨島段有什麼備用方案？')">備用方案</div>
+    <div class="ai-chip" onclick="askAI('如果天氣變差，6/29 朝 Mayne 方向划槳有什麼備用方案？')">備用方案</div>
   </div>
   <div class="ai-input-row">
     <input id="ai-input" type="text" placeholder="問任何行程問題…" onkeydown="if(event.key==='Enter')sendAI()">
@@ -398,28 +398,28 @@ const DAYS = [
     notes:'預計距離：~12 km · 估計 3–4 hr\n出發計劃時間：_____\n\n🥾 陸上選項：Brown Ridge 步道（環狀 6 km、爬升 186m、約 2–3 hr）— 划完南岸後下午健行'
   },
   {
-    color:'#7ec8f0',date:'Mon, Jun 29',title:'跨島 — Saturna → Pender',sub:'Navy Channel · Plumper Sound · ~18 km ⚠ 技術段',
+    color:'#7ec8f0',date:'Mon, Jun 29',title:'Kayak 朝 Mayne 方向探索',sub:'Lyall Harbour → Plumper Sound 北部 → 返回（不登陸 Mayne）',
     wx:{air:'20°C',water:'14°C',wind:'10',windLabel:'8–15 km/h',sun:'晴偶雲'},
     tides:[
-      {t:'07:02',type:'high',m:'3.9',note:'跨島前評估流向'},
-      {t:'13:20',type:'low',m:'0.7',note:'✓ 最佳跨島窗口'},
-      {t:'19:50',type:'high',m:'3.4',note:''}
+      {t:'07:02',type:'high',m:'3.9',note:'評估出發水流'},
+      {t:'13:20',type:'low',m:'0.7',note:'✓ 較佳划槳窗口'},
+      {t:'19:50',type:'high',m:'3.4',note:'返航前評估'}
     ],
     stops:[
-      {type:'kayak',name:'Lyall Harbour 出發',note:''},
-      {type:'warn',name:'Navy Channel 穿越',note:'留意來往渡輪 · BC Ferries 頻繁'},
-      {type:'kayak',name:'Plumper Sound',note:'開放水域 · Bft 3+ 取消跨島'},
-      {type:'camp',name:'North Pender 登陸',note:'確認 campsite 或前往 Airbnb'}
+      {type:'kayak',name:'Lyall Harbour 出發',note:'朝西北方向、Mayne Island 方向'},
+      {type:'warn',name:'Plumper Sound 開放水域',note:'留意風浪 + BC Ferries 渡輪航道（Saturna ↔ Mayne ↔ Pender 航線）'},
+      {type:'kayak',name:'接近 Mayne 東岸觀察',note:'觀察 Bennett Bay / Georgina Point 海岸 · 不登陸'},
+      {type:'kayak',name:'折返回 Lyall Harbour',note:'估計返回 17:00 前'}
     ],
-    info:'這是全程技術難度最高一段。若風速超過 Bft 3（19 km/h），強烈建議改搭渡輪。攜帶 VHF 無線電。',
+    info:'探索 Saturna 與 Mayne 之間的水域。不登陸 Mayne。注意 BC Ferries 渡輪航道（每天多班次經過 Plumper Sound）。風速 Bft 4+ 留岸或縮短距離。',
     decisions:[
-      '出發前：13:20 低潮為最佳跨島窗口；VHF 收聽天氣頻道',
-      'Go/No-Go：Plumper Sound 開放水域風速 ≥ Bft 4 → 取消，改渡輪',
-      '穿越時：與 BC Ferries 航道保持距離，全隊集結同行',
-      '備案：天氣不佳直接搭 Lyall Harbour → Otter Bay 渡輪'
+      '出發前：windy.com 確認 Plumper Sound 全日風速 < Bft 3；VHF 收聽天氣',
+      'Go/No-Go：開放水域風速 ≥ Bft 4 → 改成沿 Saturna 北岸短程划',
+      '途中：聽見 / 看見 BC Ferries 接近時，靠近岸邊讓開航道',
+      '折返判斷：若風浪增強或時間已過 14:00，立刻折返'
     ],
-    bailouts:'Saturna 西岸沿線小灣 · Port Browning, Pender（碼頭 + 補給）',
-    notes:'備案：若天氣不佳改搭 Lyall Harbour → Otter Bay 渡輪\n預計距離：~18 km · 估計 4–6 hr'
+    bailouts:'Saturna 北岸沿線小灣（Veruna Bay、Winter Cove）皆可上岸休息',
+    notes:'預計距離：彈性 · 估計 4–6 hr\n出發計劃時間：_____\n備案：天氣不佳改成 Saturna 北岸短程划'
   },
   {
     color:'#c8a86a',date:'Tue, Jun 30',title:'移往 Pender Island',sub:'Lyall Harbour → Otter Bay（渡輪）',
@@ -492,10 +492,10 @@ const ROUTES = [
   {coords:[[48.798529,-123.197554],[48.8050,-123.1900],[48.8080,-123.1500],[48.8050,-123.1000],[48.7950,-123.0600],[48.7820,-123.0420]],color:'#5db87c',day:1,dash:[2,6],kayak:true,arrowNote:'北岸 → 東端 East Point'},
   // Day 2 — Kayak 南岸（方向示意，非精確路線）
   {coords:[[48.79754,-123.20001],[48.7780,-123.1500],[48.7680,-123.1050],[48.7620,-123.0750]],color:'#7ec8f0',day:2,dash:[2,6],kayak:true,arrowNote:'沿南岸向東 · 往返'},
-  // Day 3 — 跨島 Kayak（方向示意，非精確路線）
-  {coords:[[48.798529,-123.197554],[48.7960,-123.2400],[48.7880,-123.2800],[48.7700,-123.2780]],color:'#7ec8f0',day:3,dash:[2,6],kayak:true,arrowNote:'西行穿越 Plumper Sound → Pender'},
+  // Day 3 — Kayak 朝 Mayne 方向探索（不登陸，方向示意）
+  {coords:[[48.798529,-123.197554],[48.8200,-123.2300],[48.8400,-123.2600],[48.8500,-123.2900]],color:'#7ec8f0',day:3,dash:[2,6],kayak:true,arrowNote:'朝 Mayne 方向探索 · 不登陸'},
   // Day 4 — 渡輪 Lyall Harbour → Otter Bay (Pender)
-  {coords:[[48.798529,-123.197554],[48.8150,-123.2100],[48.8400,-123.2600],[48.8520,-123.3100],[48.8350,-123.3250],[48.8100,-123.3200],[48.801266,-123.314439]],color:'#c8a86a',day:4,dash:[8,5]},
+  {coords:[[48.798529,-123.197554],[48.801266,-123.314439]],color:'#c8a86a',day:4,dash:[8,5]},
   // Day 5 — Pender 自由活動（島上開車，陸路）
   {coords:[[48.7700,-123.2700],[48.7780,-123.2900],[48.7900,-123.3000],[48.8050,-123.3150]],color:'#9b72c8',day:5,dash:[5,4]},
   // Day 6 — Pender 自由活動（島上開車，陸路）
@@ -507,7 +507,7 @@ const ROUTES = [
 // 強潮流危險區（行前需特別研究、避開大潮峰值時段）
 const HAZARDS = [
   {lat:48.7400,lng:-123.0900,label:'Boundary Pass',note:'強潮流 + 大型船隻航道 · 大潮時段避開',radius:1600},
-  {lat:48.8200,lng:-123.2550,label:'Plumper Sound',note:'跨島水域 · 留意風浪與能見度',radius:1300},
+  {lat:48.8200,lng:-123.2550,label:'Plumper Sound',note:'開放水域 · 留意風浪、能見度與 BC Ferries 航道',radius:1300},
   {lat:48.8095,lng:-123.2010,label:'Boat Pass (Winter Cove)',note:'狹窄強流 · 僅平潮時通過',radius:500}
 ];
 
@@ -515,7 +515,7 @@ const HAZARDS = [
 const BAILOUTS = [
   {lat:48.7800,lng:-123.0504,label:'East Point',note:'可上岸 · 公園腹地'},
   {lat:48.7680,lng:-123.1100,label:'Narvaez Bay',note:'遮蔽灣澳 · BC Parks 營地'},
-  {lat:48.7700,lng:-123.2780,label:'Port Browning (Pender)',note:'碼頭 + 補給 · 跨島目標點'}
+  {lat:48.7700,lng:-123.2780,label:'Port Browning (Pender)',note:'Pender 主要碼頭 + 補給'}
 ];
 
 // 海上探索標記 — 依實際環島划槳遊記（ourhomehas6wheels.com）整理
@@ -593,6 +593,21 @@ function routeMidpoint(coords){
   return [(a[0]+b[0])/2,(a[1]+b[1])/2];
 }
 
+// 編號位置：渡輪日（dash 線、非 kayak）放在「終點旁偏移」表示「到達這裡」
+// 划槳日仍放中點（過程而非單一目的地）
+function badgePosition(r){
+  if(r.kayak) return routeMidpoint(r.coords);
+  // 終點往來時方向反向偏移 0.012 度（約 1.3km），避免跟碼頭點重疊
+  const last=r.coords[r.coords.length-1];
+  const prev=r.coords[r.coords.length-2];
+  if(!prev) return last;
+  const dx=last[1]-prev[1], dy=last[0]-prev[0];
+  const len=Math.sqrt(dx*dx+dy*dy)||1;
+  // 沿著路線方向「往前再走一點點」，把編號放在終點外側海面
+  const offset=0.012;
+  return [last[0]+dy/len*offset*0.5, last[1]+dx/len*offset*0.5];
+}
+
 function buildLayers(){
   ROUTES.forEach(r=>{
     const opts={color:r.color,weight:2.5,opacity:0.55,lineJoin:'round',lineCap:'round'};
@@ -607,7 +622,7 @@ function buildLayers(){
   });
 
   ROUTES.forEach(r=>{
-    const mid=routeMidpoint(r.coords);
+    const mid=badgePosition(r);
     const badge=L.marker(mid,{icon:makeNumIcon(r.color,r.day+1,26),zIndexOffset:300,riseOnHover:true});
     badge._dayIdx=r.day;
     badge.on('click',()=>selectDay(r.day));
@@ -951,7 +966,7 @@ function showDetail(idx){
 
   const spd=parseInt(d.wx.wind)||10;
   const pct=windPercent(spd);
-  const bft=spd<12?'Bft 1–2 · 平靜，可划':spd<20?'Bft 3 · 適合，留意浪向':spd<29?'Bft 4 · 謹慎，跨島避開':spd<39?'Bft 5 · 建議留岸':'Bft 5+ · 禁止出發';
+  const bft=spd<12?'Bft 1–2 · 平靜，可划':spd<20?'Bft 3 · 適合，留意浪向':spd<29?'Bft 4 · 謹慎，開放水域避開':spd<39?'Bft 5 · 建議留岸':'Bft 5+ · 禁止出發';
   const bftColor=spd<12?'#5db87c':spd<20?'#c8d870':spd<29?'#c8a86a':'#c87060';
 
   let h='';
@@ -1113,12 +1128,12 @@ const TRIP_CONTEXT=`你是一個專業的海洋皮艇嚮導和行程助手，對
 - Jun 26：從 Coquitlam 出發，渡輪 Tsawwassen → Lyall Harbour (Saturna)，住 Arbutus Point Campground
 - Jun 27：探索 Saturna Island 陸路（East Point Light、Winter Point、Brown Ridge、Thomson Park）
 - Jun 28：Kayak Saturna 南岸 ~12 km，回到 Arbutus Point
-- Jun 29：跨島 Kayak，Saturna → Pender via Navy Channel，~18 km（技術段）
-- Jun 30：渡輪 Lyall Harbour → Otter Bay (Pender)，住 2204 Clam Bay Rd Airbnb
+- Jun 29：在 Saturna 划槳，朝 Mayne 方向探索 Plumper Sound 北部水域，不登陸 Mayne
+- Jun 30：渡輪 Lyall Harbour → Otter Bay (Pender)，住 Perfect Meadow Cabin
 - Jul 1–2：Pender Island 自由活動（Mt Norman、Medicine Beach、Beaumont Marine Park）
 - Jul 3：渡輪 Otter Bay → Tsawwassen 17:15，返回
 7月 Gulf Islands 天氣：氣溫 20–23°C，水溫 13–15°C，風速通常 8–20 km/h，日照時間長。
-安全要點：水溫低（冷水衝擊危險），必須穿 PFD，Bft 4 以上留岸，跨島需 VHF 無線電。
+安全要點：水溫低（冷水衝擊危險），必須穿 PFD，Bft 4 以上留岸，開放水域需 VHF 無線電。
 用繁體中文回答，簡潔但完整，著重實用安全資訊。`;
 
 async function askAI(q){
