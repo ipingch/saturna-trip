@@ -317,8 +317,8 @@ html,body{height:100%;overflow:hidden;font-family:'IBM Plex Sans',sans-serif;bac
   <div class="leg-row"><div class="leg-dash" style="border-color:#5db87c"></div>陸路路線</div>
   <div class="leg-row"><div style="width:14px;height:14px;border-radius:50%;border:1.5px dashed #e06050;background:rgba(224,96,80,0.15);flex-shrink:0"></div>強潮流危險區</div>
   <div class="leg-row"><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid #4caf72;flex-shrink:0"></div>避難上岸點</div>
-  <div class="leg-row"><div style="width:18px;height:18px;border-radius:50%;background:#5db87c;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;flex-shrink:0">🏕</div>你的住宿營地</div>
-  <div class="leg-row"><div class="leg-dot" style="background:#9b72c8"></div>住宿（Pender Airbnb）</div>
+  <div class="leg-row"><div style="width:18px;height:18px;border-radius:50%;background:#5db87c;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;flex-shrink:0">🏕</div>Saturna 住宿（露營）</div>
+  <div class="leg-row"><div style="width:18px;height:18px;border-radius:5px;background:#9b72c8;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;flex-shrink:0">🏠</div>Pender 住宿（小屋）</div>
   <div class="leg-row"><div class="leg-line" style="background:#f0c050;opacity:0.7"></div>環島真實航跡（KML）</div>
   <div class="leg-row"><div class="leg-line" style="background:#b85040;opacity:0.85"></div>Brown Ridge 步道（GPX）</div>
   <div class="leg-row"><div style="width:16px;height:16px;border-radius:50%;background:#b85040;border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;flex-shrink:0">🥾</div>步道起點</div>
@@ -538,9 +538,9 @@ const EXPLORE_META = {
 const MARKERS = [
   {lat:49.0054,lng:-123.1314,color:'#c8a86a',label:'Tsawwassen Ferry Terminal',days:[0,7]},
   {lat:48.7878,lng:-123.1956,color:'#c8a86a',label:'Lyall Harbour（下水點）',days:[0,1,2,3,4,7]},
-  {lat:48.79754,lng:-123.20001,color:'#5db87c',label:'🏕 Arbutus Point Campground（住宿 6/26–6/30）',days:[0,1,2,3,4],lodging:true},
+  {lat:48.79754,lng:-123.20001,color:'#5db87c',label:'🏕 Arbutus Point Campground（住宿 6/26–6/30）',days:[0,1,2,3,4],lodging:true,lodgingType:'tent'},
   {lat:48.7950,lng:-123.2983,color:'#c8a86a',label:'Otter Bay Ferry Terminal',days:[4,5,6,7]},
-  {lat:48.7700,lng:-123.2700,color:'#9b72c8',label:'Clam Bay Rd Airbnb',days:[4,5,6,7]},
+  {lat:48.81151637072045,lng:-123.31080957482325,color:'#9b72c8',label:'🏠 Perfect Meadow Cabin（住宿 6/30–7/3）',days:[4,5,6,7],lodging:true,lodgingType:'cabin'},
   {lat:48.7500,lng:-123.2750,color:'#9b72c8',label:'Beaumont Marine Park',days:[6]},
   {lat:48.7820,lng:-123.3150,color:'#9b72c8',label:'Medicine Beach',days:[5]},
 ];
@@ -620,15 +620,18 @@ function buildLayers(){
   MARKERS.forEach(m=>{
     let icon;
     if(m.lodging){
-      // 住宿營地：較大的綠色帳篷圖示，明顯區別於 KML 參考點
+      // 住宿圖示：tent (帳篷/圓形/綠) vs cabin (屋子/方形/紫)
+      const isCabin=m.lodgingType==='cabin';
+      const shape=isCabin?'border-radius:6px':'border-radius:50%';
+      const emoji=isCabin?'🏠':'🏕';
       icon=L.divIcon({className:'',
-        html:`<div style="width:30px;height:30px;border-radius:50%;background:#5db87c;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1">🏕</div>`,
+        html:`<div style="width:30px;height:30px;${shape};background:${m.color};border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1">${emoji}</div>`,
         iconSize:[30,30],iconAnchor:[15,15]});
     }else{
       icon=makeIcon(m.color,9);
     }
     const mk=L.marker([m.lat,m.lng],{icon,opacity:0.95,riseOnHover:true,zIndexOffset:m.lodging?400:0})
-      .bindPopup(`<div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:#1a2a3a;padding:2px 0"><strong>${m.label}</strong></div>`,{maxWidth:240,closeButton:false});
+      .bindPopup(`<div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:#1a2a3a;padding:2px 0"><strong>${m.label}</strong></div>`,{maxWidth:260,closeButton:false});
     mk._markerData=m;
     mk.on('mouseover',()=>mk.openPopup());
     mk.on('mouseout',()=>mk.closePopup());
