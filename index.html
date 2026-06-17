@@ -555,11 +555,17 @@ let currentLayer='topo', gpxLayer=null, activeDay=-1;
 let routeLayers=[], markerLayers=[], badgeLayers=[], hazardLayers=[], bailoutLayers=[], arrowLayers=[], exploreLayers=[];
 const activeCats=new Set();
 
-const map = L.map('map',{zoomControl:false,zoomSnap:0.25,zoomAnimation:true,fadeAnimation:true,markerZoomAnimation:true}).setView([48.84,-123.22],11);
+// 初始視角：依整趟行程範圍（Saturna + Pender + 周邊水域）自動 fit
+// 使用者之後仍可隨意縮放
+const TRIP_BOUNDS = L.latLngBounds(
+  [48.72, -123.36],  // 西南角（Pender 南端外海）
+  [48.90, -123.02]   // 東北角（Saturna 東北外海，含 Active Pass）
+);
+const map = L.map('map',{zoomControl:false,zoomSnap:0.25,zoomAnimation:true,fadeAnimation:true,markerZoomAnimation:true}).fitBounds(TRIP_BOUNDS,{padding:[20,20]});
 L.control.zoom({position:'bottomright'}).addTo(map);
 let tileLayer = L.tileLayer(tileUrls.osm,{maxZoom:17,attribution:'© OSM'}).addTo(map);
 
-setTimeout(()=>map.invalidateSize(),200);
+setTimeout(()=>{ map.invalidateSize(); map.fitBounds(TRIP_BOUNDS,{padding:[20,20]}); },200);
 window.addEventListener('resize',()=>map.invalidateSize());
 
 function switchLayer(t){
