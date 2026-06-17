@@ -487,15 +487,15 @@ const DAYS = [
 
 const ROUTES = [
   // Day 0 — 渡輪 Tsawwassen → Lyall Harbour (Saturna)
-  {coords:[[49.0054,-123.1314],[48.9400,-123.1700],[48.8700,-123.2400],[48.8200,-123.2100],[48.7950,-123.1980],[48.798529,-123.197554]],color:'#c8a86a',day:0,dash:[8,5]},
+  {coords:[[49.0054,-123.1314],[48.9400,-123.1700],[48.8700,-123.2400],[48.8200,-123.2100],[48.7950,-123.1980],[48.798065,-123.200520]],color:'#c8a86a',day:0,dash:[8,5]},
   // Day 1 — Kayak 探索 Saturna 海岸（方向示意，沿北岸 → 東端水面）
-  {coords:[[48.798529,-123.197554],[48.8050,-123.1900],[48.8080,-123.1500],[48.8050,-123.1000],[48.7950,-123.0600],[48.7820,-123.0420]],color:'#5db87c',day:1,dash:[2,6],kayak:true,arrowNote:'北岸 → 東端 East Point'},
+  {coords:[[48.798065,-123.200520],[48.8050,-123.1900],[48.8080,-123.1500],[48.8050,-123.1000],[48.7950,-123.0600],[48.7820,-123.0420]],color:'#5db87c',day:1,dash:[2,6],kayak:true,arrowNote:'北岸 → 東端 East Point'},
   // Day 2 — Kayak 南岸（方向示意，非精確路線）
   {coords:[[48.79754,-123.20001],[48.7780,-123.1500],[48.7680,-123.1050],[48.7620,-123.0750]],color:'#7ec8f0',day:2,dash:[2,6],kayak:true,arrowNote:'沿南岸向東 · 往返'},
   // Day 3 — Kayak 朝 Mayne 方向探索（不登陸，方向示意）
-  {coords:[[48.798529,-123.197554],[48.8200,-123.2300],[48.8400,-123.2600],[48.8500,-123.2900]],color:'#7ec8f0',day:3,dash:[2,6],kayak:true,arrowNote:'朝 Mayne 方向探索 · 不登陸'},
+  {coords:[[48.798065,-123.200520],[48.8200,-123.2300],[48.8400,-123.2600],[48.8500,-123.2900]],color:'#7ec8f0',day:3,dash:[2,6],kayak:true,arrowNote:'朝 Mayne 方向探索 · 不登陸'},
   // Day 4 — 渡輪 Lyall Harbour → Otter Bay (Pender)
-  {coords:[[48.798529,-123.197554],[48.801266,-123.314439]],color:'#c8a86a',day:4,dash:[8,5]},
+  {coords:[[48.798065,-123.200520],[48.801266,-123.314439]],color:'#c8a86a',day:4,dash:[8,5]},
   // Day 5 — Pender 自由活動（島上開車，陸路）
   {coords:[[48.7700,-123.2700],[48.7780,-123.2900],[48.7900,-123.3000],[48.8050,-123.3150]],color:'#9b72c8',day:5,dash:[5,4]},
   // Day 6 — Pender 自由活動（島上開車，陸路）
@@ -537,7 +537,7 @@ const EXPLORE_META = {
 
 const MARKERS = [
   {lat:49.0054,lng:-123.1314,color:'#c8a86a',label:'Tsawwassen Ferry Terminal',days:[0,7]},
-  {lat:48.79852903963152,lng:-123.19755375233147,color:'#c8a86a',label:'Lyall Harbour（下水點 + Saturna 渡輪碼頭）',days:[0,1,2,3,4,7]},
+  {lat:48.79806527602629,lng:-123.20051994104433,color:'#c8a86a',label:'Lyall Harbour Ferry Terminal（渡輪碼頭 + 划槳下水點）',days:[0,1,2,3,4,7]},
   {lat:48.79754,lng:-123.20001,color:'#5db87c',label:'🏕 Arbutus Point Campground（住宿 6/26–6/30）',days:[0,1,2,3,4],lodging:true,lodgingType:'tent'},
   {lat:48.801266207377395,lng:-123.3144388606108,color:'#c8a86a',label:'Otter Bay Ferry Terminal',days:[4,5,6,7]},
   {lat:48.81151637072045,lng:-123.31080957482325,color:'#9b72c8',label:'🏠 Perfect Meadow Cabin（住宿 6/30–7/3）',days:[4,5,6,7],lodging:true,lodgingType:'cabin'},
